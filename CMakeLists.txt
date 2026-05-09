@@ -3,6 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.10)
 
+# Use vcpkg for dependency management
+set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
@@ -25,9 +28,9 @@ if(NOT glm_POPULATED)
     FetchContent_Populate(glm)
 endif()
 
-# Try to find other libraries (optional - will use system if available)
+# Try to find graphics libraries from vcpkg
 find_package(glfw3 CONFIG QUIET)
-find_package(GLEW CONFIG QUIET)
+find_package(GLEW QUIET)
 
 # Fetch Assimp from GitHub
 FetchContent_Declare(assimp
@@ -37,17 +40,42 @@ FetchContent_Declare(assimp
 FetchContent_MakeAvailable(assimp)
 
 # Add source to this project's executable.
-add_executable (HomwWorkAssignment "HomwWorkAssignment.cpp" "HomwWorkAssignment.h")
+# NOTE: Template implementation files (Shape.cpp, transformation.cpp and all Shape subclass .cpp files)
+# are included in their corresponding .h headers and should NOT be listed here to avoid duplicate definitions
+add_executable (HomwWorkAssignment 
+    "main.cpp"
+    "Figure.cpp"
+    "Object.cpp"
+    "RenderState.cpp"
+    "Shape3D.cpp"
+    "shader.cpp"
+    "Shapes/light.cpp"
+)
 
 # Include GLM headers for this target
 target_include_directories(HomwWorkAssignment PRIVATE ${glm_SOURCE_DIR})
+
+# Include Assimp headers
+target_include_directories(HomwWorkAssignment PRIVATE ${assimp_SOURCE_DIR}/include)
+
+# Include GLEW and GLFW headers if found
+if(GLEW_FOUND)
+    target_include_directories(HomwWorkAssignment PRIVATE ${GLEW_INCLUDE_DIRS})
+endif()
+
+if(glfw3_FOUND)
+    target_include_directories(HomwWorkAssignment PRIVATE ${GLFW3_INCLUDE_DIR})
+endif()
 
 # Link libraries to the target
 target_link_libraries(HomwWorkAssignment PRIVATE 
     assimp
 )
 
-# Link optional libraries if found
+# Link libraries to the target
+target_link_libraries(HomwWorkAssignment PRIVATE assimp)
+
+# Link graphics libraries if found
 if(glfw3_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE glfw)
 endif()
@@ -56,11 +84,11 @@ if(GLEW_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE GLEW::GLEW)
 endif()
 
-# Include Assimp headers
-target_include_directories(HomwWorkAssignment PRIVATE ${assimp_SOURCE_DIR}/include)
-
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HomwWorkAssignment PROPERTY CXX_STANDARD 17)
 endif()
+
+# Set HomwWorkAssignment as the startup project for Visual Studio
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT HomwWorkAssignment)
 
 # TODO: Add tests and install targets if needed.

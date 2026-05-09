@@ -97,7 +97,7 @@ float* Circle<n>::getPoints() const{
     }
 
     for (int k = 0; k <= resolution; ++k) {
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         int vertIndex = k + 1; // +1 to skip center
         int base = vertIndex * n;
         if (n >= 2) {
@@ -134,11 +134,11 @@ void Circle<n>::zoom(int percent){
 template<int n>
 void Circle<n>::rotate(int degrees){
     // Advance the sampling offset so the polygon fan appears rotated.
-    float delta = (float)degrees * (float)M_PI / 180.0f;
+    float delta = (float)degrees * (float)3.14159265358979323846f / 180.0f;
     angleOffset += delta;
     // keep angleOffset in reasonable range
-    if (angleOffset > 2.0f * M_PI || angleOffset < -2.0f * M_PI) {
-        angleOffset = fmodf(angleOffset, 2.0f * M_PI);
+    if (angleOffset > 2.0f * 3.14159265358979323846f || angleOffset < -2.0f * 3.14159265358979323846f) {
+        angleOffset = fmodf(angleOffset, 2.0f * 3.14159265358979323846f);
     }
     //std::cout << "Circle::rotate called: degrees=" << degrees << ", angleOffset=" << angleOffset << std::endl;
 }

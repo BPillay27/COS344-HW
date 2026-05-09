@@ -41,7 +41,7 @@ glm::vec4 pointLight::calculateLighting(const glm::vec4& pointPos, const glm::ve
     }
 
     float dist = std::sqrt(distSq);
-    glm::vec4 ldir = (dist > 0.0f) ? glm::vec4(glm::normalize(glm::vec3(L))) : glm::vec4(0.0f);
+    glm::vec4 ldir = (dist > 0.0f) ? glm::vec4(glm::normalize(glm::vec3(L)), 1.0f) : glm::vec4(0.0f);
 
     float ndotl = normal[0]*ldir[0] + normal[1]*ldir[1] + normal[2]*ldir[2];
     ndotl = std::max(0.0f, ndotl);

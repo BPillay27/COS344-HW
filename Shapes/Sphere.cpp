@@ -59,11 +59,11 @@ float* Sphere<n>::getPoints() const{
     int idx = 0;
 
     for (int s = 0; s < stacks; ++s){
-        float phi1 = M_PI * ( (float)s / stacks - 0.5f );
-        float phi2 = M_PI * ( (float)(s+1) / stacks - 0.5f );
+        float phi1 = 3.14159265358979323846f * ( (float)s / stacks - 0.5f );
+        float phi2 = 3.14159265358979323846f * ( (float)(s+1) / stacks - 0.5f );
         for (int t = 0; t < slices; ++t){
-            float theta1 = 2.0f * M_PI * ( (float)t / slices );
-            float theta2 = 2.0f * M_PI * ( (float)(t+1) / slices );
+            float theta1 = 2.0f * 3.14159265358979323846f * ( (float)t / slices );
+            float theta2 = 2.0f * 3.14159265358979323846f * ( (float)(t+1) / slices );
 
             this->pushVertex(result, idx, phi1, theta1);
             this->pushVertex(result, idx, phi2, theta1);
@@ -103,40 +103,40 @@ float* Sphere<n>::getTexCoords() const {
     float* result = new float[verts * 2];
     int idx = 0;
     for (int s = 0; s < stacks; ++s){
-        float phi1 = M_PI * ( (float)s / stacks - 0.5f );
-        float phi2 = M_PI * ( (float)(s+1) / stacks - 0.5f );
+        float phi1 = 3.14159265358979323846f * ( (float)s / stacks - 0.5f );
+        float phi2 = 3.14159265358979323846f * ( (float)(s+1) / stacks - 0.5f );
         for (int t = 0; t < slices; ++t){
-            float theta1 = 2.0f * M_PI * ( (float)t / slices );
-            float theta2 = 2.0f * M_PI * ( (float)(t+1) / slices );
+            float theta1 = 2.0f * 3.14159265358979323846f * ( (float)t / slices );
+            float theta2 = 2.0f * 3.14159265358979323846f * ( (float)(t+1) / slices );
 
-            float u = theta1 / (2.0f * M_PI);
+            float u = theta1 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            float v = (phi1 + (M_PI * 0.5f)) / M_PI;
+            float v = (phi1 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
 
-            u = theta1 / (2.0f * M_PI);
+            u = theta1 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            v = (phi2 + (M_PI * 0.5f)) / M_PI;
+            v = (phi2 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
 
-            u = theta2 / (2.0f * M_PI);
+            u = theta2 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            v = (phi1 + (M_PI * 0.5f)) / M_PI;
+            v = (phi1 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
 
-            u = theta2 / (2.0f * M_PI);
+            u = theta2 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            v = (phi1 + (M_PI * 0.5f)) / M_PI;
+            v = (phi1 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
 
-            u = theta1 / (2.0f * M_PI);
+            u = theta1 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            v = (phi2 + (M_PI * 0.5f)) / M_PI;
+            v = (phi2 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
 
-            u = theta2 / (2.0f * M_PI);
+            u = theta2 / (2.0f * 3.14159265358979323846f);
             if (u < 0.0f) u += 1.0f;
-            v = (phi2 + (M_PI * 0.5f)) / M_PI;
+            v = (phi2 + (3.14159265358979323846f * 0.5f)) / 3.14159265358979323846f;
             result[idx++] = u; result[idx++] = v;
         }
     }
@@ -157,11 +157,11 @@ float* Sphere<n>::getNormals() const {
     float* result = new float[verts * 3];
     int idx = 0;
     for (int s = 0; s < stacks; ++s){
-        float phi1 = M_PI * ( (float)s / stacks - 0.5f );
-        float phi2 = M_PI * ( (float)(s+1) / stacks - 0.5f );
+        float phi1 = 3.14159265358979323846f * ( (float)s / stacks - 0.5f );
+        float phi2 = 3.14159265358979323846f * ( (float)(s+1) / stacks - 0.5f );
         for (int t = 0; t < slices; ++t){
-            float theta1 = 2.0f * M_PI * ( (float)t / slices );
-            float theta2 = 2.0f * M_PI * ( (float)(t+1) / slices );
+            float theta1 = 2.0f * 3.14159265358979323846f * ( (float)t / slices );
+            float theta2 = 2.0f * 3.14159265358979323846f * ( (float)(t+1) / slices );
 
             float px = radius * cosf(phi1) * cosf(theta1) + center[0];
             float py = radius * cosf(phi1) * sinf(theta1) + center[1];
@@ -268,7 +268,10 @@ glm::vec<n,float> Sphere<n>::normalAtPoint(const glm::vec<n,float>& p) const {
 
 template<int n>
 void Sphere<n>::print() const{
-    std::cout << "_ Sphere Center _" << std::endl; center.print();
+    std::cout << "_ Sphere Center _" << std::endl; 
+    std::cout << "Center: (" << center[0];
+    for(int i = 1; i < n; i++) std::cout << ", " << center[i];
+    std::cout << ")" << std::endl;
     std::cout << "radius: " << radius << " stacks:" << stacks << " slices:" << slices << std::endl;
 }
 

@@ -1,6 +1,8 @@
 #ifndef TRIANGULARPRISM_H
 #define TRIANGULARPRISM_H
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "Shape.h"
 #include "Triangle.h"
 #include "Square.h"

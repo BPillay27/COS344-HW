@@ -1,6 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <glm/glm.hpp>
 #include "Shape.h"
 #include "transformation.h"

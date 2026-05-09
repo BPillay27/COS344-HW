@@ -2,7 +2,7 @@
 
 template<int n>
 glm::mat<n,n,float> roty(int m){
-    float theta = (float)m * (float)M_PI / 180.0f;
+    float theta = (float)m * 3.14159265358979323846f / 180.0f;
     glm::mat<n,n,float> R;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
@@ -25,7 +25,7 @@ glm::mat<n,n,float> roty(int m){
 
 template<int n>
 glm::mat<n,n,float> rotx(int m){
-    float theta = (float)m * (float)M_PI / 180.0f;
+    float theta = (float)m * 3.14159265358979323846f / 180.0f;
     glm::mat<n,n,float> R;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
@@ -47,7 +47,7 @@ glm::mat<n,n,float> rotx(int m){
 
 template<int n>
 glm::mat<n,n,float> rotz(int m){
-    float theta = (float)m * (float)M_PI / 180.0f;
+    float theta = (float)m * 3.14159265358979323846f / 180.0f;
     glm::mat<n,n,float> R;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){

@@ -175,7 +175,7 @@ void TriangularPrism<n>::zoom(int percent){
 
 template<int n>
 void TriangularPrism<n>::rotate(int degrees){
-    float rad = degrees * M_PI / 180.0f;
+    float rad = degrees * 3.14159265358979323846f / 180.0f;
     glm::mat<n,n,float> rotMatrix;
     rotMatrix.identity();
     rotMatrix[0][0] = cosf(rad);

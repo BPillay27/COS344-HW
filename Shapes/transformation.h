@@ -1,8 +1,9 @@
 #ifndef TRANSFORMATION_H
 #define TRANSFORMATION_H
 
-#include <glm/glm.hpp>
+#define _USE_MATH_DEFINES
 #include <cmath>
+#include <glm/glm.hpp>
 
 template<int n>
 glm::mat<n,n,float> roty(int m);

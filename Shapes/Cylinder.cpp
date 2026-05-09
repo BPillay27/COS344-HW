@@ -221,7 +221,7 @@ float* Cylinder<n>::getPoints() const{
     writePosition(topCenter);
 
     for (int k = 0; k <= resolution; ++k) {
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
         float sa = sinf(a);
         glm::vec<n,float> p;
@@ -240,7 +240,7 @@ float* Cylinder<n>::getPoints() const{
     writePosition(bottomCenter);
 
     for (int k = resolution; k >= 0; --k) {
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
         float sa = sinf(a);
         glm::vec<n,float> p;
@@ -255,7 +255,7 @@ float* Cylinder<n>::getPoints() const{
 
     // Side strip: top and bottom alternating
     for (int k = 0; k <= resolution; ++k) {
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
         float sa = sinf(a);
         glm::vec<n,float> pt, pb, nrm;
@@ -364,7 +364,7 @@ float* Cylinder<n>::getNormals() const {
 
     // Side normals: compute per point
     for (int k = 0; k <= resolution; ++k) {
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
         float sa = sinf(a);
         glm::vec<n,float> pt;
@@ -536,7 +536,9 @@ GLenum Cylinder<n>::glDrawMode() const {
 template<int n>
 void Cylinder<n>::print() const{
     std::cout << "_ Center _ " << std::endl;
-    center.print();
+    std::cout << "Center: (" << center[0];
+    for(int i = 1; i < n; i++) std::cout << ", " << center[i];
+    std::cout << ")" << std::endl;
     std::cout << "_ Radius _ " << std::endl;
     std::cout << radius << std::endl;
     std::cout << "_ Height _ " << std::endl;
@@ -552,10 +554,10 @@ void Cylinder<n>::zoom(int percent){
 
 template<int n>
 void Cylinder<n>::rotate(int degrees){
-    float delta = (float)degrees * (float)M_PI / 180.0f;
+    float delta = (float)degrees * (float)3.14159265358979323846f / 180.0f;
     angleOffset += delta;
-    if (angleOffset > 2.0f * M_PI || angleOffset < -2.0f * M_PI) {
-        angleOffset = fmodf(angleOffset, 2.0f * M_PI);
+    if (angleOffset > 2.0f * 3.14159265358979323846f || angleOffset < -2.0f * 3.14159265358979323846f) {
+        angleOffset = fmodf(angleOffset, 2.0f * 3.14159265358979323846f);
     }
 }
 

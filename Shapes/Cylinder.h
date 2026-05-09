@@ -1,9 +1,10 @@
 #ifndef CYLINDER_H
 #define CYLINDER_H
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <sstream>
 #include <iomanip>
-#include <cmath>
 
 #include "Shape.h"
 #include <glm/glm.hpp>

@@ -321,7 +321,7 @@ static void recomputePerVertexColorsForScene() {
                     glm::vec4 L = gLightPos - p;
                     float Llen = std::sqrt(glm::dot(L, L));
                     if (Llen > 0.0f) {
-                        glm::vec4 Ldir = glm::vec4(glm::normalize(glm::vec3(L)));
+                        glm::vec4 Ldir = glm::vec4(glm::normalize(glm::vec3(L)), 1.0f);
                         float d = norm[0]*Ldir[0] + norm[1]*Ldir[1] + norm[2]*Ldir[2];
                         if (d < 0.0f) { norm[0] = -norm[0]; norm[1] = -norm[1]; norm[2] = -norm[2]; }
                     }
@@ -527,7 +527,7 @@ int main()
         gCylinderPtr = floorCyl;
 
         float radius = 0.25f;
-        Sphere<4>* ball = new Sphere<4>({0.0f, alignedy + radius + 0.01f, 0}, radius,6, 8);
+        Sphere<4>* ball = new Sphere<4>({0.0f, alignedy + radius + 0.01f, 0.0f, 1.0f}, radius, 6, 8);
         gBallPtr = ball;
 
         Figure planed=Figure();

@@ -148,7 +148,7 @@ float* Cone<n>::getPoints() const{
 
     // base perimeter
     for (int k = 0; k <= resolution; ++k){
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a) * radius;
         float sa = sinf(a) * radius;
         for (int j = 0; j < n; ++j){
@@ -167,7 +167,7 @@ float* Cone<n>::getPoints() const{
 
     // side perimeter (same perimeter points as base)
     for (int k = 0; k <= resolution; ++k){
-        float a = (2.0f * M_PI * k) / resolution + angleOffset;
+        float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a) * radius;
         float sa = sinf(a) * radius;
         for (int j = 0; j < n; ++j){
