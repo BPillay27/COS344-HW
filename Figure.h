@@ -3,16 +3,15 @@
 
 #include "Shape3D.h"
 #include "Object.h"
-#include "shapes/Matrix.h"
-#include "shapes/Vector.h"
+#include <glm/glm.hpp>
 #include <vector>
 
 
 class Figure : public Object {
 private:
     std::vector<Shape3D* > shapes;
-    Vector<4> rotationAxisStart1;  // First point defining rotation axis
-    Vector<4> rotationAxisEnd1;    // Second point defining rotation axis
+    glm::vec4 rotationAxisStart1;  // First point defining rotation axis
+    glm::vec4 rotationAxisEnd1;    // Second point defining rotation axis
     
 public:
     Figure();
@@ -26,7 +25,7 @@ public:
     void rotateZ(int degrees);
     void move(float x, float y, float z);
     void zoom(int percent);
-    Figure& operator*=(const Matrix<4,4>& transform);
+    Figure& operator*=(const glm::mat4& transform);
     void draw(bool wireframe = false);
     void setShapeColour(int r, int g, int b, float a);
     int getNumShapes() const;
