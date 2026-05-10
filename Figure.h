@@ -26,7 +26,7 @@ public:
     void move(float x, float y, float z);
     void zoom(int percent);
     Figure& operator*=(const glm::mat4& transform);
-    void draw(bool wireframe = false);
+    void draw();
     void setShapeColour(int r, int g, int b, float a);
     int getNumShapes() const;
     Shape3D* getShape(int index);

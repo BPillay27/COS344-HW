@@ -8,11 +8,12 @@
 
 class Shape3D : public Object {
 private:
-    Shape<4>* shape; // non-owning raw pointer; this class does NOT delete it    
+    Shape<4>* shape; // owning pointer; this class owns and deletes the shape
+    
 public:
     explicit Shape3D(Shape<4>* s);
-    Shape3D(const Shape3D& other);
-    Shape3D& operator=(const Shape3D& other);
+    Shape3D(const Shape3D& other);  // deep copy: creates new owned shape
+    Shape3D& operator=(const Shape3D& other);  // deep copy assignment
     Shape3D& operator*=(const glm::mat4& transform);
     Shape3D* operator*(const glm::mat4& transform) const;
     
@@ -22,7 +23,7 @@ public:
     void rotateZ(int degrees);
     void move(float x, float y, float z);
     void zoom(int percent);
-    void draw(bool wireframe = false);
+    void draw();
     void setColour(int r, int g, int b, float a);
     Shape<4>* getShape() const;
     

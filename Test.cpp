@@ -9,6 +9,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "shader.hpp"
 
@@ -50,6 +51,10 @@ using namespace std;
 bool wireframeMode = false;
 unsigned int rotationSpeed=0;
 vector<Object*> scene;
+// Global directional light
+directionalLight* gDirectionalLight = nullptr;
+// Global point light
+pointLight* gPointLight = nullptr;
 // Debug toggles (removed debugAlpha/invertAlpha/alphaMode)
 
 // Global pointers to allow runtime modification of shapes' tessellation
@@ -63,7 +68,7 @@ int gPendingBallSlicesDelta = 0;
 // Global CPU light state (transformed with scene rotations)
 glm::vec4 gLightPos = glm::vec4(0.0f, 0.6f, 0.0f, 1.0f);
 glm::vec4 gLightCol = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-float gLightIntensity = 5.0f;
+float gLightIntensity = 15.0f;  // Increased from 5.0 for better visibility
 float gLightRange = 5.0f;
 // Light follow flag: when true, light follows sphere center; when false, light moves independently
 bool gLightFollowBall = true;
@@ -91,13 +96,16 @@ static int gBallColIdx = 3; // default white-ish glass
 static int gLightColIdx = 3;
 
 static float ballApha=0.3f;
-// Recompute per-vertex colors for plane and ball using current global light.
-static void recomputePerVertexColorsForScene();
 
 void key_listener(GLFWwindow* window, int key, int scancode, int action, int mods){
 
     if(key==GLFW_KEY_ENTER && action==GLFW_PRESS){
         wireframeMode=!wireframeMode;
+        if(wireframeMode){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
     }
     // Dynamic geometry controls
     if(action==GLFW_PRESS){
@@ -115,7 +123,7 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
         if(key==GLFW_KEY_COMMA){
             // if SHIFT is held, move light in local -Z
             if (mods & GLFW_MOD_SHIFT) {
-                gLightPos[2] -= 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene();
+                gLightPos[2] -= 0.05f; gLightFollowBall = false;
             } else if(gCylinderPtr){
                 int r = gCylinderPtr->getResolution();
                 if(r>1) gCylinderPtr->setResolution(r-1);
@@ -123,7 +131,7 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
         } else if(key==GLFW_KEY_PERIOD){
             // if SHIFT is held, move light in local +Z
             if (mods & GLFW_MOD_SHIFT) {
-                gLightPos[2] += 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene();
+                gLightPos[2] += 0.05f; gLightFollowBall = false;
             } else if(gCylinderPtr){
                 int r = gCylinderPtr->getResolution();
                 if(r<1024) gCylinderPtr->setResolution(r+1);
@@ -148,7 +156,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gCylinderPtr) {
                 Colour c = gPalette[gFloorColIdx];
                 gCylinderPtr->setColour(c.r, c.g, c.b, c.a);
-                recomputePerVertexColorsForScene();
             }
         }
         if (key == GLFW_KEY_K) {
@@ -156,7 +163,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gCylinderPtr) {
                 Colour c = gPalette[gFloorColIdx];
                 gCylinderPtr->setColour(c.r, c.g, c.b, c.a);
-                recomputePerVertexColorsForScene();
             }
         }
 
@@ -166,8 +172,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gBallPtr) {
                 Colour c = gPalette[gBallColIdx];
                 gBallPtr->setColour(c.r, c.g, c.b, ballApha);
-                // Update displayed base color immediately
-                recomputePerVertexColorsForScene();
             }
         }
         if (key == GLFW_KEY_P) {
@@ -175,7 +179,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gBallPtr) {
                 Colour c = gPalette[gBallColIdx];
                 gBallPtr->setColour(c.r, c.g, c.b, ballApha);
-                recomputePerVertexColorsForScene();
             }
         }
 
@@ -184,13 +187,11 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             gLightColIdx = (gLightColIdx - 1 + (int)gPalette.size()) % (int)gPalette.size();
                 Colour c = gPalette[gLightColIdx];
             gLightCol[0] = c.r / 255.0f; gLightCol[1] = c.g / 255.0f; gLightCol[2] = c.b / 255.0f; gLightCol[3] = c.a;
-            recomputePerVertexColorsForScene();
         }
         if (key == GLFW_KEY_I) {
             gLightColIdx = (gLightColIdx + 1) % (int)gPalette.size();
             Colour c = gPalette[gLightColIdx];
             gLightCol[0] = c.r / 255.0f; gLightCol[1] = c.g / 255.0f; gLightCol[2] = c.b / 255.0f; gLightCol[3] = c.a;
-            recomputePerVertexColorsForScene();
         }
 
         // Alpha value control: + and - keys (both keypad and main keys)
@@ -200,7 +201,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gBallPtr) {
                 Colour c = gPalette[gBallColIdx];
                 gBallPtr->setColour(c.r, c.g, c.b, ballApha);
-                recomputePerVertexColorsForScene();
             }
            
         }
@@ -210,7 +210,6 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             if (gBallPtr) {
                 Colour c = gPalette[gBallColIdx];
                 gBallPtr->setColour(c.r, c.g, c.b, ballApha);
-                recomputePerVertexColorsForScene();
             }
         }
         // Rotations: W/S -> rotate X, A/D -> rotate Y, E/Q -> rotate Z (15 degrees)
@@ -218,39 +217,33 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             for(Object* obj : scene) obj->rotateX(15);
             // keep CPU light at sphere center after rotating the scene (only if following)
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         if(key==GLFW_KEY_S){
             for(Object* obj : scene) obj->rotateX(-15);
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         if(key==GLFW_KEY_A){
             for(Object* obj : scene) obj->rotateY(15);
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         if(key==GLFW_KEY_D){
             for(Object* obj : scene) obj->rotateY(-15);
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         if(key==GLFW_KEY_E){
             for(Object* obj : scene) obj->rotateZ(15);
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         if(key==GLFW_KEY_Q){
             for(Object* obj : scene) obj->rotateZ(-15);
             if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-            recomputePerVertexColorsForScene();
         }
         
         
-        if(key==GLFW_KEY_UP){ gLightPos[1] += 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene(); }
-        if(key==GLFW_KEY_DOWN){ gLightPos[1] -= 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene(); }
-        if(key==GLFW_KEY_LEFT){ gLightPos[0] -= 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene(); }
-        if(key==GLFW_KEY_RIGHT){ gLightPos[0] += 0.05f; gLightFollowBall = false; recomputePerVertexColorsForScene(); }
+        if(key==GLFW_KEY_UP){ gLightPos[1] += 0.05f; gLightFollowBall = false; }
+        if(key==GLFW_KEY_DOWN){ gLightPos[1] -= 0.05f; gLightFollowBall = false; }
+        if(key==GLFW_KEY_LEFT){ gLightPos[0] -= 0.05f; gLightFollowBall = false; }
+        if(key==GLFW_KEY_RIGHT){ gLightPos[0] += 0.05f; gLightFollowBall = false; }
         // Use SHIFT+',' and SHIFT+'.' (COMMA/PERIOD) to move light in Z if requested
         // Reset: Space key resets light follow and repositions light to ball centre
         if(key==GLFW_KEY_SPACE){ 
@@ -272,81 +265,15 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
             gLightCol[0] = cl.r / 255.0f; gLightCol[1] = cl.g / 255.0f; gLightCol[2] = cl.b / 255.0f; gLightCol[3] = cl.a;
             // reset alpha of ball
             gAlphaValue = 0.3f;
-            recomputePerVertexColorsForScene();
         }
         
         
     }
 }
 
-// Implementation: recompute per-vertex colors for plane and ball using global light
-static void recomputePerVertexColorsForScene() {
-    // Only the floor (cylinder) receives the light projection per requirements.
-    if (gCylinderPtr) {
-        pointLight pl(gLightPos, gLightCol, gLightIntensity, gLightRange);
-        int n = 4;
-        int numFloats = gCylinderPtr->getNumPoints();
-        int verts = numFloats / n;
-        float* pts = gCylinderPtr->getPoints();
-        float* norms = gCylinderPtr->getNormals();
-        if (pts && norms) {
-            // get material colour from floor and ball and combine them so the glass ball colour
-            // (and its alpha) influences the apparent floor colour
-            float* floorCol = gCylinderPtr->getColour();
-            glm::vec4 material = glm::vec4(floorCol[0], floorCol[1], floorCol[2], floorCol[3]);
-            delete[] floorCol;
-            // If a ball exists, blend its colour into the floor based on the ball's alpha (gAlphaValue)
-            if (gBallPtr) {
-                float* ballCol = gBallPtr->getColour();
-                float ballAlpha = gAlphaValue; // use user-controlled alpha for glass
-                // blend RGB channels
-                for (int cc = 0; cc < 3; ++cc) {
-                    material[cc] = material[cc] * (1.0f - ballAlpha) + ballCol[cc] * ballAlpha;
-                }
-                // keep material opaque for floor lighting computations
-                material[3] = 1.0f;
-                delete[] ballCol;
-            }
+// Note: GPU shader now handles all lighting (directional, point, ambient)
+// No longer need CPU-based per-vertex color computation
 
-            std::vector<float> colors(verts * 3);
-            int pi = 0, ni = 0;
-            int res = gCylinderPtr->getResolution();
-            int capVerts = 1 + (res + 1); // matches Cylinder::getPoints ordering
-            for (int i = 0; i < verts; ++i) {
-                glm::vec4 p = glm::vec4(0.0f); for (int k = 0; k < 3; ++k) p[k] = pts[pi++]; if (n>3) p[3] = pts[pi++];
-                glm::vec4 norm = glm::vec4(0.0f); norm[0] = norms[ni++]; norm[1] = norms[ni++]; norm[2] = norms[ni++]; norm[3] = 0.0f;
-                // For cap vertices, ensure the normal faces toward the light; getPoints orders
-                // as: top cap center + rim (capVerts), bottom cap center + rim (capVerts), then sides.
-                if (i < capVerts || (i >= capVerts && i < 2 * capVerts)) {
-                    glm::vec4 L = gLightPos - p;
-                    float Llen = std::sqrt(glm::dot(L, L));
-                    if (Llen > 0.0f) {
-                        glm::vec4 Ldir = glm::vec4(glm::normalize(glm::vec3(L)), 1.0f);
-                        float d = norm[0]*Ldir[0] + norm[1]*Ldir[1] + norm[2]*Ldir[2];
-                        if (d < 0.0f) { norm[0] = -norm[0]; norm[1] = -norm[1]; norm[2] = -norm[2]; }
-                    }
-                }
-                glm::vec4 lc = pl.calculateLighting(p, norm, material);
-                colors[i*3+0] = lc[0]; colors[i*3+1] = lc[1]; colors[i*3+2] = lc[2];
-            }
-            gCylinderPtr->setPerVertexColors(colors.data(), (int)colors.size(), GL_STATIC_DRAW);
-        }
-        delete[] pts; delete[] norms;
-    }
-
-    // The ball should not be affected by the light projection — set per-vertex color to neutral (1,1,1)
-    if (gBallPtr) {
-        int n = 4;
-        int numFloats = gBallPtr->getNumPoints();
-        int verts = numFloats / n;
-        // create a white color array
-        std::vector<float> colors(verts * 3);
-        for (int i = 0; i < verts; ++i) { colors[i*3+0] = 1.0f; colors[i*3+1] = 1.0f; colors[i*3+2] = 1.0f; }
-        gBallPtr->setPerVertexColors(colors.data(), (int)colors.size(), GL_STATIC_DRAW);
-    }
-
-    // (no visualiser sphere to update)
-}
 const char *getError()
 {
     const char *errorDescription;
@@ -419,6 +346,23 @@ int main()
     // Use normal filled rendering and enable face culling
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_CULL_FACE);
+    
+    // Initialize directional light
+    gDirectionalLight = new directionalLight(
+        glm::vec4(0.5f, 1.0f, 0.5f, 0.0f),  // Direction (normalized)
+        glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),  // Color (white)
+        1.0f                                 // Intensity
+    );
+    std::cout << "Directional light created successfully." << std::endl;
+    
+    // Initialize point light - will follow gLightPos (keyboard controlled and ball-tracking)
+    gPointLight = new pointLight(
+        gLightPos,              // Position (will be updated each frame to follow gLightPos)
+        gLightCol,              // Color (controlled by U/I keys)
+        gLightIntensity,        // Intensity
+        gLightRange             // Range
+    );
+    std::cout << "Point light created successfully." << std::endl;
 
     // Load textures (colour, alpha, displacement)
     auto loadTextureFromFile = [&](const char* path, bool flipY=true)->GLuint{
@@ -449,9 +393,9 @@ int main()
         return texID;
     };
 
-    GLuint colorTex = loadTextureFromFile("colour.png");
-    GLuint displacementTex = loadTextureFromFile("displacement.png");
-    GLuint alphaTex = loadTextureFromFile("alpha.png");
+    GLuint colorTex = loadTextureFromFile("Textures/colour/colour.png");
+    GLuint displacementTex = loadTextureFromFile("Textures/displacement/displacement.png");
+    GLuint alphaTex = loadTextureFromFile("Textures/alpha/alpha.png");
     if (colorTex == 0u) {
         unsigned char white[4] = {255,255,255,255};
         glGenTextures(1, &colorTex);
@@ -538,7 +482,6 @@ int main()
     ball->createGLBuffers();
     // Place the CPU light at the sphere center
     gLightPos = ball->center;
-    recomputePerVertexColorsForScene();
     Shape3D golfBall(ball);
 
 
@@ -551,15 +494,69 @@ int main()
 
 
     glfwSetKeyCallback(window,key_listener);
-    // compute initial per-vertex colors once (will be updated on rotations)
-    recomputePerVertexColorsForScene();
 
     do{ 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
         
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+        // Set polygon mode based on wireframe toggle
+        if(wireframeMode){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        
+        // Set directional light uniforms
+        if (gDirectionalLight) {
+            GLint locDir = glGetUniformLocation(programID, "uLightDir");
+            GLint locCol = glGetUniformLocation(programID, "uLightColor");
+            GLint locInt = glGetUniformLocation(programID, "uLightIntensity");
+            GLint locNM = glGetUniformLocation(programID, "uNormalMatrix");
+            
+            if (locDir != -1) {
+                glm::vec3 lightDir = glm::normalize(glm::vec3(gDirectionalLight->getDirection()));
+                glUniform3f(locDir, lightDir.x, lightDir.y, lightDir.z);
+            }
+            if (locCol != -1) {
+                glm::vec3 lightCol = glm::vec3(gDirectionalLight->getColor());
+                glUniform3f(locCol, lightCol.x, lightCol.y, lightCol.z);
+            }
+            if (locInt != -1) {
+                glUniform1f(locInt, gDirectionalLight->getIntensity());
+            }
+            if (locNM != -1) {
+                // Use identity normal matrix for now (no model transformation)
+                glm::mat3 normalMatrix = glm::mat3(1.0f);
+                glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+            }
+        }
+        
+        // Update point light position to follow gLightPos and set uniforms
+        if (gPointLight) {
+            // Sync point light position and color with global light state
+            gPointLight->setPosition(gLightPos);
+            gPointLight->setColor(gLightCol);
+            
+            GLint locPos = glGetUniformLocation(programID, "uPointLightPos");
+            GLint locCol = glGetUniformLocation(programID, "uPointLightColor");
+            GLint locInt = glGetUniformLocation(programID, "uPointLightIntensity");
+            GLint locRange = glGetUniformLocation(programID, "uPointLightRange");
+            
+            if (locPos != -1) {
+                glm::vec3 lightPos = glm::vec3(gPointLight->getPosition());
+                glUniform3f(locPos, lightPos.x, lightPos.y, lightPos.z);
+            }
+            if (locCol != -1) {
+                glm::vec3 lightCol = glm::vec3(gPointLight->getColor());
+                glUniform3f(locCol, lightCol.x, lightCol.y, lightCol.z);
+            }
+            if (locInt != -1) {
+                glUniform1f(locInt, gPointLight->getIntensity());
+            }
+            if (locRange != -1) {
+                glUniform1f(locRange, gPointLight->getRange());
+            }
+        }
 
         if (gBallPtr && (gPendingBallStacksDelta != 0 || gPendingBallSlicesDelta != 0)) {
             int newStacks = gBallPtr->stacks + gPendingBallStacksDelta;
@@ -574,7 +571,6 @@ int main()
             if (gLightFollowBall && gBallPtr) {
                 gLightPos = gBallPtr->center;
             }
-            recomputePerVertexColorsForScene();
             gPendingBallStacksDelta = 0;
             gPendingBallSlicesDelta = 0;
         }
@@ -591,7 +587,9 @@ int main()
                 glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, 0);
-                s->draw(wireframeMode);
+                glDisable(GL_CULL_FACE);  // Disable backface culling for floor (complex winding)
+                s->draw();
+                glEnable(GL_CULL_FACE);   // Re-enable for ball
             }
         }
 
@@ -619,7 +617,7 @@ int main()
                     delete[] col;
                 }
                 glDepthMask(GL_FALSE);
-                s->draw(wireframeMode);
+                s->draw();
                 glDepthMask(GL_TRUE);
             }
         }
@@ -631,6 +629,18 @@ int main()
 
     delete floorCyl ;
     delete ball;
+    }
+
+    // Clean up directional light
+    if (gDirectionalLight) {
+        delete gDirectionalLight;
+        gDirectionalLight = nullptr;
+    }
+    
+    // Clean up point light
+    if (gPointLight) {
+        delete gPointLight;
+        gPointLight = nullptr;
     }
 
     glDeleteProgram(programID);

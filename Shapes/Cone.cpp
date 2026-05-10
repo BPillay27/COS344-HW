@@ -40,7 +40,7 @@ Cone<n>::Cone(const glm::vec<n,float>& apex, const glm::vec<n,float>& baseCenter
 }
 
 template<int n>
-Cone<n>::Cone(const Cone<n> &two){
+Cone<n>::Cone(const Cone<n> &two) : Shape<n>(two) {
     this->apex = two.apex;
     this->baseCenter = two.baseCenter;
     this->radius = two.radius;
@@ -48,11 +48,6 @@ Cone<n>::Cone(const Cone<n> &two){
     this->resolution = two.resolution;
     this->angleOffset = two.angleOffset;
     this->axis = two.axis;
-    {
-        float* c = two.getColour();
-        for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-        delete[] c;
-    }
 }
 
 template<int n>
@@ -190,47 +185,23 @@ int Cone<n>::getNumPoints() const{
 }
 
 template<int n>
-void Cone<n>::draw(bool wireframe){
+void Cone<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
     int baseVerts = resolution + 2;
     int sideVerts = resolution + 2;
     glBindVertexArray(this->VAO);
     glDisableVertexAttribArray(1);
     glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
-    if (wireframe && this->EBO != 0u && this->lineIndexCount > 0) {
-        glDrawElements(GL_LINES, this->lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(GL_TRIANGLE_FAN, 0, baseVerts);
-        glDrawArrays(GL_TRIANGLE_FAN, baseVerts, sideVerts);
-    }
+    
+    glDrawArrays(GL_TRIANGLE_FAN, 0, baseVerts);
+    glDrawArrays(GL_TRIANGLE_FAN, baseVerts, sideVerts);
+    
     glBindVertexArray(0);
 }
 
 template<int n>
 void Cone<n>::createGLBuffers(GLenum usage){
     Shape<n>::createGLBuffers(usage);
-    int baseVerts = resolution + 2;
-    int sideStart = baseVerts; // side apex then perimeter
-    std::vector<GLuint> indices;
-    // base fan triangles (center at 0)
-    for (int i = 0; i <= resolution - 1; ++i){
-        GLuint a = static_cast<GLuint>(0);
-        GLuint b = static_cast<GLuint>(1 + i);
-        GLuint c = static_cast<GLuint>(1 + ((i+1)%resolution));
-        indices.push_back(a); indices.push_back(b);
-        indices.push_back(b); indices.push_back(c);
-        indices.push_back(c); indices.push_back(a);
-    }
-    // side fan triangles (apex at sideStart)
-    for (int i = 0; i <= resolution - 1; ++i){
-        GLuint a = static_cast<GLuint>(sideStart + 0);
-        GLuint b = static_cast<GLuint>(sideStart + 1 + i);
-        GLuint c = static_cast<GLuint>(sideStart + 1 + ((i+1)%resolution));
-        indices.push_back(a); indices.push_back(b);
-        indices.push_back(b); indices.push_back(c);
-        indices.push_back(c); indices.push_back(a);
-    }
-    this->setLineIndices(indices);
 }
 
 template<int n>

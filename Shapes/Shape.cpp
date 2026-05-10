@@ -22,7 +22,6 @@ Shape<n>::Shape(const Shape& other) {
 
     VAO = 0u; VBO = 0u; EBO = 0u;
     vertexCount = other.vertexCount;
-    lineIndexCount = 0;
 }
 
 template <int n>
@@ -33,7 +32,6 @@ Shape<n>& Shape<n>::operator=(const Shape& other) {
         for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
         VAO = 0u; VBO = 0u; EBO = 0u;
         vertexCount = other.vertexCount;
-        lineIndexCount = 0;
     }
     return *this;
 }
@@ -44,10 +42,8 @@ Shape<n>::Shape(Shape&& other) noexcept {
     // steal GL handles
     VAO = other.VAO; VBO = other.VBO; EBO = other.EBO;
     vertexCount = other.vertexCount;
-    lineIndexCount = other.lineIndexCount;
     other.VAO = other.VBO = other.EBO = 0u;
     other.vertexCount = 0;
-    other.lineIndexCount = 0;
 }
 
 template <int n>
@@ -57,10 +53,8 @@ Shape<n>& Shape<n>::operator=(Shape&& other) noexcept {
         for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
         VAO = other.VAO; VBO = other.VBO; EBO = other.EBO;
         vertexCount = other.vertexCount;
-        lineIndexCount = other.lineIndexCount;
         other.VAO = other.VBO = other.EBO = 0u;
         other.vertexCount = 0;
-        other.lineIndexCount = 0;
     }
     return *this;
 }
@@ -234,32 +228,15 @@ void Shape<n>::setPerVertexColors(const float* colors, int numFloats, GLenum usa
     glBindVertexArray(0);
 }
 
-template <int n>
-void Shape<n>::setLineIndices(const std::vector<GLuint>& indices) {
-    if (VAO == 0u) return;
-    
-    if (EBO == 0u) glGenBuffers(1, &EBO);
-    
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-    
-    lineIndexCount =indices.size();
-    glBindVertexArray(0);
-}
+
 
 template <int n>
-void Shape<n>::draw(bool wireframe){
+void Shape<n>::draw(){
     if (VAO == 0u){
         return;
     }
-    // Minimal draw path: bind VAO and issue draw call. Avoid expensive queries/logging.
     glBindVertexArray(VAO);
-    if (wireframe && EBO != 0u && lineIndexCount > 0) {
-        glDrawElements(GL_LINES, lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(glDrawMode(), 0, vertexCount);
-    }
+    glDrawArrays(glDrawMode(), 0, vertexCount);
     glBindVertexArray(0);
 }
 

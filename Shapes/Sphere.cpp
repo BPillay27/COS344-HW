@@ -16,16 +16,11 @@ Sphere<n>::Sphere(const glm::vec<n,float>& c, float r, int s, int l){
 }
 
 template<int n>
-Sphere<n>::Sphere(const Sphere<n>& other){
+Sphere<n>::Sphere(const Sphere<n>& other) : Shape<n>(other) {
     this->center = other.center;
     this->radius = other.radius;
     this->stacks = other.stacks;
     this->slices = other.slices;
-    {
-        float* c = other.getColour();
-        for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-        delete[] c;
-    }
 }
 
 template<int n>
@@ -304,22 +299,6 @@ void Sphere<n>::rotate(int degrees){
 template<int n>
 void Sphere<n>::createGLBuffers(GLenum usage){
     Shape<n>::createGLBuffers(usage);
-
-    // Build line indices for wireframe: every triangle's three edges
-    int verts = getNumPoints() / n;
-    int triangles = verts / 3;
-    std::vector<GLuint> indices;
-    indices.reserve(triangles * 6);
-    for (int t = 0; t < triangles; ++t) {
-        GLuint b = (GLuint)(t * 3);
-        indices.push_back(b);
-        indices.push_back(b + 1);
-        indices.push_back(b + 1);
-        indices.push_back(b + 2);
-        indices.push_back(b + 2);
-        indices.push_back(b);
-    }
-    if (!indices.empty()) this->setLineIndices(indices);
 }
 
 template<int n>
@@ -331,7 +310,7 @@ template<int n>
 GLenum Sphere<n>::glDrawMode() const{ return GL_TRIANGLES; }
 
 template<int n>
-void Sphere<n>::draw(bool wireframe){
+void Sphere<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
-    Shape<n>::draw(wireframe);
+    Shape<n>::draw();
 }

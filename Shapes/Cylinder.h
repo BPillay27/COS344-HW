@@ -48,7 +48,7 @@ class Cylinder: public Shape<n> {
         void setResolution(int r);
         int getResolution() const;
         virtual GLenum glDrawMode() const override;
-        virtual void draw(bool wireframe = false) override;
+        virtual void draw() override;
         virtual void createGLBuffers(GLenum usage = GL_STATIC_DRAW) override;
 };
 

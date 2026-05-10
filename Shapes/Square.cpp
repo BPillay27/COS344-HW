@@ -33,16 +33,11 @@ Square<n>::Square(const glm::vec<n,float>& tl, const glm::vec<n,float>& tr, cons
 }
 
 template <int n>
-    Square<n>::Square(const Square<n> &two){
+    Square<n>::Square(const Square<n> &two) : Shape<n>(two) {
     this->tl=two.tl;
     this->tr=two.tr;
     this->br=two.br;
     this->bl=two.bl;
-        {
-            float* c = two.getColour();
-            for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-            delete[] c;
-        }
 }
 
 template <int n>
@@ -139,23 +134,13 @@ std::string Square<n>::fprint() const {
 }
 
 template<int n>
-void Square<n>::draw(bool wireframe) {
+void Square<n>::draw() {
     if (this->VAO == 0u) this->createGLBuffers();
     int verts = getNumPoints() / n;
     glBindVertexArray(this->VAO);
     glDisableVertexAttribArray(1);
     glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
-    if (wireframe && (this->EBO == 0u || this->lineIndexCount == 0)) {
-        // ensure indices exist for wireframe
-        this->createGLBuffers();
-    }
-    if (wireframe && this->EBO != 0u && this->lineIndexCount > 0) {
-        glDrawElements(GL_LINES, this->lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else if (wireframe) {
-        glDrawArrays(GL_LINE_LOOP, 0, verts);
-    } else {
-        glDrawArrays(GL_TRIANGLE_FAN, 0, verts);
-    }
+    glDrawArrays(GL_TRIANGLE_FAN, 0, verts);
     glBindVertexArray(0);
 }
 
@@ -167,16 +152,4 @@ GLenum Square<n>::glDrawMode() const {
 template<int n>
 void Square<n>::createGLBuffers(GLenum usage){
     Shape<n>::createGLBuffers(usage);
-    int verts = getNumPoints() / n;
-    if (this->VAO != 0u && verts > 0) {
-
-            std::vector<GLuint> lineIdx = {
-                0,1,
-                1,2,
-                2,3,
-                3,0,
-                0,2
-            };
-        this->setLineIndices(lineIdx);
-    }
 }

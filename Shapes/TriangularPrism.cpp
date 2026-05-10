@@ -41,15 +41,11 @@ TriangularPrism<n>::TriangularPrism(const Triangle<n>& t1, const Triangle<n>& t2
 }
 
 template<int n>
-TriangularPrism<n>::TriangularPrism(const TriangularPrism<n>& other){
-    triangle1 = other.triangle1;
-    triangle2 = other.triangle2;
-    side1 = other.side1;
-    side2 = other.side2;
-    side3 = other.side3;
-    this->VAO = other.VAO;
-    this->VBO = other.VBO;
-    this->EBO = other.EBO;
+TriangularPrism<n>::TriangularPrism(const TriangularPrism<n>& other) :
+    Shape<n>(other),
+    triangle1(other.triangle1), triangle2(other.triangle2),
+    side1(other.side1), side2(other.side2), side3(other.side3),
+    VAO(other.VAO), VBO(other.VBO), EBO(other.EBO) {
 }
 
 template<int n>
@@ -109,7 +105,7 @@ int TriangularPrism<n>::getNumPoints() const{
 }
 
 template<int n>
-void TriangularPrism<n>::draw(bool wireframe){
+void TriangularPrism<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
     
     int t1Offset = 0;

@@ -3,16 +3,30 @@ Shape3D::Shape3D(Shape<4>* s) : shape(s) {
     // Object base initializes `position` to default
 }
 
-Shape3D::Shape3D(const Shape3D& other) 
-    : shape(other.shape) {
-    // shallow copy: do not allocate or own the underlying Shape
+Shape3D::Shape3D(const Shape3D& other) {
+    if (other.shape) {
+        // Deep copy: use polymorphic copy via identity matrix transformation
+        // This calls the shape's operator* which creates a new shape instance
+        glm::mat4 identity(1.0f);
+        shape = other.shape->operator*(identity);
+    } else {
+        shape = nullptr;
+    }
     position = other.position;
 }
 
 Shape3D& Shape3D::operator=(const Shape3D& other) {
     if (this != &other) {
-        // shallow assignment: do not delete or take ownership
-        shape = other.shape;
+        // Delete old shape if we own one
+        delete shape;
+        
+        // Deep copy: use polymorphic copy via identity matrix transformation
+        if (other.shape) {
+            glm::mat4 identity(1.0f);
+            shape = other.shape->operator*(identity);
+        } else {
+            shape = nullptr;
+        }
         position = other.position;
     }
     return *this;
@@ -86,9 +100,9 @@ void Shape3D::zoom(int percent) {
     }
 }
 
-void Shape3D::draw(bool wireframe) {
+void Shape3D::draw() {
     if (shape) {
-        shape->draw(wireframe);
+        shape->draw();
     }
 }
 
@@ -115,5 +129,6 @@ void Shape3D::updateGLBuffers() {
 }
 
 Shape3D::~Shape3D() {
-    // non-owning: do not delete `shape` here
+    // Delete owned shape
+    delete shape;
 }

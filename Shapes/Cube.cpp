@@ -85,20 +85,7 @@ Cube<n>::Cube(){
 }
 
 template<int n>
-Cube<n>::Cube(const Cube<n>& two){
-	this->f1 = two.f1;
-	this->f2 = two.f2;
-	this->f3 = two.f3;
-	this->f4 = two.f4;
-	this->f5 = two.f5;
-	this->f6 = two.f6;
-	this->center = two.center;
-
-	{
-		float* c = two.getColour();
-		for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-		delete[] c;
-	}
+Cube<n>::Cube(const Cube<n>& two) : Shape<n>(two), f1(two.f1), f2(two.f2), f3(two.f3), f4(two.f4), f5(two.f5), f6(two.f6), center(two.center) {
 }
 
 template<int n>
@@ -163,14 +150,14 @@ int Cube<n>::getNumPoints() const{
 }
 
 template<int n>
-void Cube<n>::draw(bool wireframe){
+void Cube<n>::draw(){
 	// Delegate drawing to each face so faces' own EBOs/VAOs are used
-	f1.draw(wireframe);
-	f2.draw(wireframe);
-	f3.draw(wireframe);
-	f4.draw(wireframe);
-	f5.draw(wireframe);
-	f6.draw(wireframe);
+	f1.draw();
+	f2.draw();
+	f3.draw();
+	f4.draw();
+	f5.draw();
+	f6.draw();
 }
 
 template<int n>

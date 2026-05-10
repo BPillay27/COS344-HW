@@ -102,16 +102,11 @@ Cylinder<n>::Cylinder(){
 }
 
 template<int n>
-Cylinder<n>::Cylinder(const Cylinder<n> &two){
+Cylinder<n>::Cylinder(const Cylinder<n> &two) : Shape<n>(two) {
     this->center=two.center;
     this->radius=two.radius;
     this->height=two.height;
     this->resolution=two.resolution;
-    {
-        float* c = two.getColour();
-        for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-        delete[] c;
-    }
     this->angleOffset = two.angleOffset;
     this->axis = two.axis;
     this->basisU = two.basisU;
@@ -447,7 +442,7 @@ glm::vec<n,float> Cylinder<n>::normalAtPoint(const glm::vec<n,float>& p) const {
 }
 
 template<int n>
-void Cylinder<n>::draw(bool wireframe){
+void Cylinder<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
 
     int capVerts = 1 + (resolution + 1);
@@ -467,13 +462,9 @@ void Cylinder<n>::draw(bool wireframe){
     glDisableVertexAttribArray(1);
     glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
     
-    if (wireframe && this->EBO != 0u && this->lineIndexCount > 0) {
-        glDrawElements(GL_LINES, this->lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(GL_TRIANGLE_FAN, 0, capVerts);
-        glDrawArrays(GL_TRIANGLE_FAN, capVerts, capVerts);
-        glDrawArrays(GL_TRIANGLE_STRIP, 2 * capVerts, sideVerts);
-    }
+    glDrawArrays(GL_TRIANGLE_FAN, 0, capVerts);
+    glDrawArrays(GL_TRIANGLE_FAN, capVerts, capVerts);
+    glDrawArrays(GL_TRIANGLE_STRIP, 2 * capVerts, sideVerts);
     
     glBindVertexArray(0);
 }
@@ -481,51 +472,6 @@ void Cylinder<n>::draw(bool wireframe){
 template<int n>
 void Cylinder<n>::createGLBuffers(GLenum usage){
     Shape<n>::createGLBuffers(usage);
-    
-    int capVerts = 1 + (resolution + 1);
-    int topCapCenter = 0;
-    int topCapPerimStart = 1;
-    int bottomCapCenter = capVerts;
-    int bottomCapPerimStart = capVerts + 1;
-    int sideStart = 2 * capVerts;
-
-    std::vector<GLuint> indices;
-    
-
-    for (int k = 0; k <= resolution; ++k) {
-        indices.push_back(static_cast<GLuint>(topCapCenter));
-        indices.push_back(static_cast<GLuint>(topCapPerimStart + k));
-    }
-    
-    for (int k = 0; k < resolution; ++k) {
-        indices.push_back(static_cast<GLuint>(topCapPerimStart + k));
-        indices.push_back(static_cast<GLuint>(topCapPerimStart + k + 1));
-    }
-    indices.push_back(static_cast<GLuint>(topCapPerimStart + resolution));
-    indices.push_back(static_cast<GLuint>(topCapPerimStart));
-    
-
-    for (int k = 0; k <= resolution; ++k) {
-        indices.push_back(static_cast<GLuint>(bottomCapCenter));
-        indices.push_back(static_cast<GLuint>(bottomCapPerimStart + k));
-    }
-    
-    for (int k = 0; k < resolution; ++k) {
-        indices.push_back(static_cast<GLuint>(bottomCapPerimStart + k));
-        indices.push_back(static_cast<GLuint>(bottomCapPerimStart + k + 1));
-    }
-    indices.push_back(static_cast<GLuint>(bottomCapPerimStart + resolution));
-    indices.push_back(static_cast<GLuint>(bottomCapPerimStart));
-    
-
-    for (int k = 0; k < resolution; ++k) {
-        GLuint topIdx = static_cast<GLuint>(sideStart + 2 * k);
-        GLuint botIdx = static_cast<GLuint>(sideStart + 2 * k + 1);
-        indices.push_back(topIdx);
-        indices.push_back(botIdx);
-    }
-    
-    this->setLineIndices(indices);
 }
 
 template<int n>

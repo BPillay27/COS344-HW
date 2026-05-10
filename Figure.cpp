@@ -164,9 +164,9 @@ Figure& Figure::operator*=(const glm::mat4& transform) {
     return *this;
 }
 
-void Figure::draw(bool wireframe) {
+void Figure::draw() {
     for (auto& shape : shapes) {
-        shape->draw(wireframe);
+        shape->draw();
     }
 }
 

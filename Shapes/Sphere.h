@@ -36,7 +36,7 @@ public:
     void createGLBuffers(GLenum usage = GL_STATIC_DRAW) override;
     void updateGLBuffers(GLenum usage = GL_DYNAMIC_DRAW) override;
     GLenum glDrawMode() const override;
-    void draw(bool wireframe = false) override;
+    void draw() override;
 private:
     void pushVertex(float* result, int &idx, float phi, float theta) const;
 };

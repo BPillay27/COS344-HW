@@ -11,7 +11,7 @@ public:
     virtual ~Object();
 
     // Basic transform/draw interface
-    virtual void draw(bool wireframe = false) = 0;
+    virtual void draw() = 0;
     virtual void move(float x, float y, float z)=0;
     virtual void rotate(int degrees)=0;
     virtual void rotateX(int degrees)=0;

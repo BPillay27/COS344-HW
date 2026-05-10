@@ -30,7 +30,7 @@ public:
     
     virtual float* getPoints() const;
     virtual int getNumPoints() const;
-    virtual void draw(bool wireframe = false);
+    virtual void draw();
     virtual void createGLBuffers(GLenum usage = GL_STATIC_DRAW);
     virtual void updateGLBuffers(GLenum usage = GL_DYNAMIC_DRAW);
     virtual GLenum glDrawMode() const;

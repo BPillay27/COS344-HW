@@ -32,7 +32,7 @@ class Circle: public Shape<n> {
         void zoom(int percent);
         void rotate(int degrees);
         virtual GLenum glDrawMode() const override;
-        virtual void draw(bool wireframe = false) override;
+        virtual void draw() override;
         virtual void createGLBuffers(GLenum usage = GL_STATIC_DRAW) override;
 };
 

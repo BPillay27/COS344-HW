@@ -29,7 +29,7 @@ public:
     
     float* getPoints() const;
     int getNumPoints() const;
-    void draw(bool wireframe);
+    void draw();
     void createGLBuffers(GLenum usage = GL_DYNAMIC_DRAW);
     
     void print() const;

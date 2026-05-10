@@ -19,15 +19,10 @@ Circle<n>::Circle(){
 }
 
 template <int n>
-Circle<n>::Circle(const Circle<n> &two){
-    this->center=two.center;
-    this->radius=two.radius;
-    this->resolution=two.resolution;
-    {
-        float* c = two.getColour();
-        for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-        delete[] c;
-    }
+Circle<n>::Circle(const Circle<n> &two) : Shape<n>(two) {
+    this->center = two.center;
+    this->radius = two.radius;
+    this->resolution = two.resolution;
     this->angleOffset = two.angleOffset;
 }
 
@@ -163,46 +158,18 @@ GLenum Circle<n>::glDrawMode() const {
     return GL_TRIANGLE_FAN;
 }
 
-template<int n>
-void Circle<n>::createGLBuffers(GLenum usage){
-    Shape<n>::createGLBuffers(usage);
-    
-    // Create wireframe indices: radii + perimeter
-    std::vector<GLuint> indices;
-    
-    // Radii: center (index 0) to each perimeter point (1..resolution)
-    for (int k = 1; k <= resolution; ++k) {
-        indices.push_back(0);
-        indices.push_back((GLuint)k);
-    }
-    
-    // Perimeter edges: connect consecutive perimeter points
-    for (int k = 1; k < resolution; ++k) {
-        indices.push_back((GLuint)k);
-        indices.push_back((GLuint)(k + 1));
-    }
-    
-    // Closing edge: last to first perimeter point
-    indices.push_back((GLuint)resolution);
-    indices.push_back(1u);
-    
-    this->setLineIndices(indices);
-}
+
 
 template<int n>
-void Circle<n>::draw(bool wireframe){
+void Circle<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
     
     glBindVertexArray(this->VAO);
     glDisableVertexAttribArray(1);
     glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
     
-    if (wireframe && this->EBO != 0u && this->lineIndexCount > 0) {
-        glDrawElements(GL_LINES, this->lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else {
-        int numVerts = getNumPoints() / n;
-        glDrawArrays(GL_TRIANGLE_FAN, 0, numVerts);
-    }
+    int numVerts = getNumPoints() / n;
+    glDrawArrays(GL_TRIANGLE_FAN, 0, numVerts);
     
     glBindVertexArray(0);
 }

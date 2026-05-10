@@ -15,15 +15,10 @@ Triangle<n>::Triangle(){
 
 
 template<int n>
-Triangle<n>::Triangle(const Triangle<n> &t){
+Triangle<n>::Triangle(const Triangle<n> &t) : Shape<n>(t) {
     this->p1 = t.p1;
     this->p2 = t.p2;
     this->p3 = t.p3;
-        {
-            float* c = t.getColour();
-            for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-            delete[] c;
-        }
 }
 
 template<int n>
@@ -122,26 +117,17 @@ GLenum Triangle<n>::glDrawMode() const {
 template<int n>
 void Triangle<n>::createGLBuffers(GLenum usage){
     Shape<n>::createGLBuffers(usage);
-    
-    // Create wireframe indices for triangle edges
-    std::vector<GLuint> indices = {0, 1, 1, 2, 2, 0};
-    
-    this->setLineIndices(indices);
 }
 
 template<int n>
-void Triangle<n>::draw(bool wireframe){
+void Triangle<n>::draw(){
     if (this->VAO == 0u) this->createGLBuffers();
     
     glBindVertexArray(this->VAO);
     glDisableVertexAttribArray(1);
     glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
     
-    if (wireframe && this->EBO != 0u && this->lineIndexCount > 0) {
-        glDrawElements(GL_LINES, this->lineIndexCount, GL_UNSIGNED_INT, 0);
-    } else {
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-    }
+    glDrawArrays(GL_TRIANGLES, 0, 3);
     
     glBindVertexArray(0);
 }

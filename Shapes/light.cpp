@@ -78,3 +78,50 @@ void pointLight::setIntensity(float i){
     this->intensity=i;
 }
 
+// The start of the directional light implementation
+
+directionalLight::directionalLight() : light() {
+    intensity = 1.0f;
+}
+
+directionalLight::directionalLight(glm::vec4 dir, glm::vec4 col, float intensity) : light(col, dir) {
+    this->intensity = intensity;
+}
+
+glm::vec4 directionalLight::calculateLighting(const glm::vec4& pointPos, const glm::vec4& normal, const glm::vec4& material) const {
+    // For directional light, 'dir' is the direction FROM which the light comes.
+    // L is constant for all points in the scene.
+    glm::vec3 L = glm::normalize(glm::vec3(this->dir));
+    glm::vec3 N = glm::normalize(glm::vec3(normal));
+
+    float ndotl = glm::dot(N, L);
+    ndotl = std::max(0.0f, ndotl);
+
+    glm::vec4 result;
+    const float ambient = 0.05f; // Constant ambient factor
+
+    for (int j = 0; j < 3; ++j) {
+        // Diffuse component: material * lightColor * dot(N,L) * intensity
+        float diffuse = material[j] * (this->color[j] * ndotl * intensity);
+        // Ambient component
+        float amb = material[j] * ambient;
+        
+        float val = (diffuse + amb) * material[3]; // Scale by material alpha
+        result[j] = std::max(0.0f, std::min(1.0f, val));
+    }
+    result[3] = material[3];
+    return result;
+}
+
+void directionalLight::setDirection(glm::vec4 dir) {
+    this->dir = dir;
+}
+
+void directionalLight::rotateX(float radians) {
+    // Create a rotation matrix for the X-axis
+    glm::mat4 rot = glm::rotate(glm::mat4(1.0f), radians, glm::vec3(1.0f, 0.0f, 0.0f));
+    
+    // Apply rotation to the direction vector
+    // W is 0.0f because it is a direction vector, not a position
+    this->dir = rot * glm::vec4(glm::vec3(this->dir), 0.0f);
+}

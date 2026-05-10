@@ -20,7 +20,6 @@ class Shape{
         GLuint normVBO = 0u;
         GLuint colorVBO = 0u;
         int vertexCount = 0; // number of vertices (not floats)
-        int lineIndexCount = 0;
     public:
         virtual Shape& operator*=(const glm::mat<n,n,float>&) =0;
         virtual Shape* operator*(const glm::mat<n,n,float>&) const =0;
@@ -41,10 +40,9 @@ class Shape{
         virtual void updateGLBuffers(GLenum usage = GL_DYNAMIC_DRAW);
         // Set per-vertex colors (RGB floats, numFloats must be verts*3)
         void setPerVertexColors(const float* colors, int numFloats, GLenum usage = GL_DYNAMIC_DRAW);
-        void setLineIndices(const std::vector<GLuint>& indices);
         void deleteGLBuffers();
         virtual GLenum glDrawMode() const = 0;
-        virtual void draw(bool wireframe = false) = 0;
+        virtual void draw() = 0;
         Shape() = default;
             // Safe copy/move semantics: copies do NOT duplicate GL handles.
         Shape(const Shape& other);

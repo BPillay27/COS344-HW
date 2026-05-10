@@ -70,12 +70,9 @@ SquarePyramid<n>::SquarePyramid(const Square<n>& baseSquare, const glm::vec<n,fl
 }
 
 template<int n>
-SquarePyramid<n>::SquarePyramid(const SquarePyramid<n>& other){
-    base = other.base;
-    for (int i = 0; i < 4; ++i) sides[i] = other.sides[i];
-    float* c = other.getColour();
-    for (int i = 0; i < 4; ++i) this->colour[i] = c[i];
-    delete[] c;
+SquarePyramid<n>::SquarePyramid(const SquarePyramid<n>& other) :
+    Shape<n>(other),
+    base(other.base), sides{other.sides[0], other.sides[1], other.sides[2], other.sides[3]} {
 }
 
 template<int n>
@@ -121,9 +118,9 @@ int SquarePyramid<n>::getNumPoints() const{
 }
 
 template<int n>
-void SquarePyramid<n>::draw(bool wireframe){
-    base.draw(wireframe);
-    for (int i = 0; i < 4; ++i) sides[i].draw(wireframe);
+void SquarePyramid<n>::draw(){
+    base.draw();
+    for (int i = 0; i < 4; ++i) sides[i].draw();
 }
 
 template<int n>
