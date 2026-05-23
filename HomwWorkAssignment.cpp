@@ -84,6 +84,11 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 wireframeMode = !wireframeMode;
             }
             break;
+        case GLFW_KEY_I:
+            if (action == GLFW_PRESS) {
+                gUseGrayscale = !gUseGrayscale;  // Toggle grayscale filter
+            }
+            break;
     }
 
 }
@@ -232,6 +237,10 @@ int main()
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        // Set grayscale uniform
+        GLint grayscaleLoc = glGetUniformLocation(programID, "useGrayscale");
+        if (grayscaleLoc != -1) glUniform1i(grayscaleLoc, gUseGrayscale ? 1 : 0);
         
         // Render mini-map in bottom right corner using scissor test
         glEnable(GL_SCISSOR_TEST);

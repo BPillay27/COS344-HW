@@ -152,6 +152,9 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
         if(key==GLFW_KEY_M){ // toggle alpha map
             gUseAlphaMap = !gUseAlphaMap;
         }
+        if(key==GLFW_KEY_I){ // toggle grayscale filter
+            gUseGrayscale = !gUseGrayscale;
+        }
 
         // Colour cycling keys (choose two per object: prev/next)
         // Floor: J (prev), K (next)
@@ -632,6 +635,7 @@ int main()
                 loc = glGetUniformLocation(programID, "useColor"); if (loc != -1) glUniform1i(loc, gUseColor ? 1 : 0);
                 loc = glGetUniformLocation(programID, "useAlphaMap"); if (loc != -1) glUniform1i(loc, gUseAlphaMap ? 1 : 0);
                 loc = glGetUniformLocation(programID, "useDisplacement"); if (loc != -1) glUniform1i(loc, gUseDisplacement ? 1 : 0);
+                loc = glGetUniformLocation(programID, "useGrayscale"); if (loc != -1) glUniform1i(loc, gUseGrayscale ? 1 : 0);
                 loc = glGetUniformLocation(programID, "displacementScale"); if (loc != -1) glUniform1f(loc, gDisplacementScale);
                 
                 // Set shape-specific shininess
