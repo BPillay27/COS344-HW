@@ -8,6 +8,9 @@ uniform sampler2D displacementMap;
 uniform bool useDisplacement;
 uniform float displacementScale;
 
+// Camera uniform for view direction
+uniform vec3 uCameraPos;
+
 // Directional Light Uniforms
 uniform vec3 uLightDir;
 uniform vec3 uLightColor;
@@ -18,6 +21,9 @@ uniform vec3 uPointLightPos;
 uniform vec3 uPointLightColor;
 uniform float uPointLightIntensity;
 uniform float uPointLightRange;
+
+// Blinn-Phong material properties
+uniform float uShininess;
 
 uniform mat3 uNormalMatrix;
 
@@ -35,23 +41,33 @@ void main() {
 
     TexCoords = aTexCoords;
 
-    // Calculate directional lighting
+    // Blinn-Phong Lighting Model
     vec3 N = normalize(uNormalMatrix * aNormal);
-    vec3 L = normalize(uLightDir);
-    float ndotl = max(0.0, dot(N, L));
+    vec3 V = normalize(uCameraPos - newPos);
     
     // Ambient lighting (visible even in shadows)
     vec3 ambientLight = vec3(0.45);
     
-    // Directional light contribution
-    vec3 directionalLight = uLightColor * (ndotl * uLightIntensity);
+    // ===== DIRECTIONAL LIGHT =====
+    vec3 L_dir = normalize(uLightDir);
+    float ndotl_dir = max(0.0, dot(N, L_dir));
     
-    // Point light calculations
+    // Diffuse component
+    vec3 directionalDiffuse = uLightColor * (ndotl_dir * uLightIntensity);
+    
+    // Specular component (Blinn-Phong)
+    vec3 H_dir = normalize(L_dir + V);
+    float ndoth_dir = max(0.0, dot(N, H_dir));
+    vec3 directionalSpecular = uLightColor * (pow(ndoth_dir, uShininess) * uLightIntensity * 0.5);
+    
+    vec3 directionalLight = directionalDiffuse + directionalSpecular;
+    
+    // ===== POINT LIGHT =====
     vec3 pointLightVec = uPointLightPos - newPos;
     float distToPointLight = length(pointLightVec);
     
-    vec3 pointLightDir = normalize(pointLightVec);
-    float pointNdotl = max(0.0, dot(N, pointLightDir));
+    vec3 L_point = normalize(pointLightVec);
+    float ndotl_point = max(0.0, dot(N, L_point));
     
     // Point light with attenuation (inverse square law with smoothing)
     float attenuation = 1.0 / (1.0 + 0.1 * (distToPointLight * distToPointLight));
@@ -59,7 +75,15 @@ void main() {
         attenuation = 0.0;
     }
     
-    vec3 pointLight = uPointLightColor * (pointNdotl * uPointLightIntensity * attenuation);
+    // Diffuse component
+    vec3 pointDiffuse = uPointLightColor * (ndotl_point * uPointLightIntensity * attenuation);
+    
+    // Specular component (Blinn-Phong)
+    vec3 H_point = normalize(L_point + V);
+    float ndoth_point = max(0.0, dot(N, H_point));
+    vec3 pointSpecular = uPointLightColor * (pow(ndoth_point, uShininess) * uPointLightIntensity * attenuation * 0.5);
+    
+    vec3 pointLight = pointDiffuse + pointSpecular;
     
     // Combine all lighting
     vec3 totalLight = ambientLight + directionalLight + pointLight;
