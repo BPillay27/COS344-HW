@@ -1,8 +1,8 @@
 #ifndef SHAPE3D_H
 #define SHAPE3D_H
 
-#include "shapes/Shape.h"
-#include "shapes/transformation.h"
+#include "Shapes/Shape.h"
+#include "Shapes/transformation.h"
 #include <glm/glm.hpp>
 #include "Object.h"
 
