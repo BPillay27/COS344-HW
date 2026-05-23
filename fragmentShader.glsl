@@ -17,17 +17,13 @@ void main() {
 
     if (useColor) {
         vec4 sampledTex = texture(colorMap, TexCoords);
-        // Multiply RGB by texture RGB. Do NOT use the color texture alpha channel
-        // to avoid unintentionally dimming or making parts translucent.
         result.rgb *= sampledTex.rgb;
     }
 
 
     if (useAlphaMap) {
         float maskValue = texture(alphaMap, TexCoords).r;
-        // Binary cutoff: discard below threshold and force opaque otherwise
-        if (maskValue < 0.5) discard;
-        result.a = 1.0;
+
     }
 
     // Apply CPU per-vertex color (lighting) only — no GPU lighting calculations.
