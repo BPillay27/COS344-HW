@@ -41,27 +41,7 @@ SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
 Drone* gDrone = nullptr;
 
-// Mouse state for drone look
-double gLastMouseX = 0.0, gLastMouseY = 0.0;
-bool gFirstMouse = true;
-const float MOUSE_SENSITIVITY = 0.05f;
 
-void cursor_callback(GLFWwindow* /*window*/, double xpos, double ypos) {
-    if (gFirstMouse) {
-        gLastMouseX = xpos;
-        gLastMouseY = ypos;
-        gFirstMouse = false;
-        return;
-    }
-    float dx =  (float)(xpos - gLastMouseX) * MOUSE_SENSITIVITY;
-    float dy =  (float)(gLastMouseY - ypos) * MOUSE_SENSITIVITY; // inverted: up = positive pitch
-    gLastMouseX = xpos;
-    gLastMouseY = ypos;
-    if (gDrone) {
-        gDrone->addYaw(dx);
-        gDrone->addPitch(dy);
-    }
-}
 
 #if defined(__has_include)
 #  if __has_include("stb_image.h")
@@ -216,10 +196,6 @@ int main() {
     gDrone = new Drone();
     gDrone->createGLBuffers();
 
-    // Lock cursor for FPS-style mouse look; Escape releases in the loop.
-    glfwSetCursorPosCallback(window, cursor_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
     // Build Hole 8 geometry and register it in the global scene.
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
 
