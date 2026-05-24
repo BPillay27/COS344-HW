@@ -66,6 +66,34 @@ int Triangle<n>::getNumPoints() const{
 }
 
 template<int n>
+float* Triangle<n>::getNormals() const{
+    float* result = new float[9];
+
+    glm::vec<n, float> edge1 = p2 - p1;
+    glm::vec<n, float> edge2 = p3 - p1;
+    glm::vec3 normal = glm::cross(glm::vec3(edge2), glm::vec3(edge1));
+    float length = glm::length(normal);
+    if (length > 0.0f) {
+        normal /= length;
+    } else {
+        normal = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    for (int vertex = 0; vertex < 3; ++vertex) {
+        for (int component = 0; component < 3; ++component) {
+            result[vertex * 3 + component] = normal[component];
+        }
+    }
+
+    return result;
+}
+
+template<int n>
+int Triangle<n>::getNumNormals() const{
+    return 9;
+}
+
+template<int n>
 void Triangle<n>::zoom(int percent){
     float factor = percent / 100.0f;
     // compute centroid

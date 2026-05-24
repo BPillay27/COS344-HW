@@ -31,6 +31,7 @@ using namespace std;
 #include "Figure.h"
 #include "Shape3D.h"
 #include "RenderState.h"
+#include "Drone.h"
 
 
 #if defined(__has_include)
@@ -100,6 +101,31 @@ static int gBallColIdx = 3; // default white-ish glass
 static int gLightColIdx = 3;
 
 static float ballApha=0.3f;
+
+// Drone
+Drone* gDrone = nullptr;
+
+// Mouse state for drone look
+double gLastMouseX = 0.0, gLastMouseY = 0.0;
+bool gFirstMouse = true;
+const float MOUSE_SENSITIVITY = 0.001f;
+
+void cursor_callback(GLFWwindow* /*window*/, double xpos, double ypos) {
+    if (gFirstMouse) {
+        gLastMouseX = xpos;
+        gLastMouseY = ypos;
+        gFirstMouse = false;
+        return;
+    }
+    float dx =  (float)(xpos - gLastMouseX) * MOUSE_SENSITIVITY;
+    float dy =  (float)(gLastMouseY - ypos) * MOUSE_SENSITIVITY; // inverted: up = positive pitch
+    gLastMouseX = xpos;
+    gLastMouseY = ypos;
+    if (gDrone) {
+        gDrone->addYaw(dx);
+        gDrone->addPitch(dy);
+    }
+}
 
 void key_listener(GLFWwindow* window, int key, int scancode, int action, int mods){
 
@@ -219,60 +245,13 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
                 gBallPtr->setColour(c.r, c.g, c.b, ballApha);
             }
         }
-        // Rotations: W/S -> rotate X, A/D -> rotate Y, E/Q -> rotate Z (15 degrees)
-        if(key==GLFW_KEY_W){
-            for(Object* obj : scene) obj->rotateX(15);
-            // keep CPU light at sphere center after rotating the scene (only if following)
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        if(key==GLFW_KEY_S){
-            for(Object* obj : scene) obj->rotateX(-15);
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        if(key==GLFW_KEY_A){
-            for(Object* obj : scene) obj->rotateY(15);
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        if(key==GLFW_KEY_D){
-            for(Object* obj : scene) obj->rotateY(-15);
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        if(key==GLFW_KEY_E){
-            for(Object* obj : scene) obj->rotateZ(15);
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        if(key==GLFW_KEY_Q){
-            for(Object* obj : scene) obj->rotateZ(-15);
-            if (gBallPtr && gLightFollowBall) gLightPos = gBallPtr->center;
-        }
-        
-        
-        if(key==GLFW_KEY_UP){ gLightPos[1] += 0.05f; gLightFollowBall = false; }
-        if(key==GLFW_KEY_DOWN){ gLightPos[1] -= 0.05f; gLightFollowBall = false; }
-        if(key==GLFW_KEY_LEFT){ gLightPos[0] -= 0.05f; gLightFollowBall = false; }
-        if(key==GLFW_KEY_RIGHT){ gLightPos[0] += 0.05f; gLightFollowBall = false; }
-        // Use SHIFT+',' and SHIFT+'.' (COMMA/PERIOD) to move light in Z if requested
-        // Reset: Space key resets light follow and repositions light to ball centre
-        if(key==GLFW_KEY_SPACE){ 
-            // reset follow behaviour and position
-            gLightFollowBall = true;
-            if (gBallPtr) gLightPos = gBallPtr->center;
-            // reset colours to defaults from palette
-            gFloorColIdx = 9; //Grey
-            gBallColIdx = 10; // white
-            gLightColIdx = 3; // white
-            Colour cf = gPalette[gFloorColIdx];
-            Colour cb = gPalette[gBallColIdx];
-            Colour cl = gPalette[gLightColIdx];
-            if (gCylinderPtr) gCylinderPtr->setColour(cf.r, cf.g, cf.b, cf.a);
-            // reset ball alpha and colour
-            gAlphaValue = 0.3f;
-            ballApha = gAlphaValue;
-            if (gBallPtr) gBallPtr->setColour(cb.r, cb.g, cb.b, ballApha);
-            gLightCol[0] = cl.r / 255.0f; gLightCol[1] = cl.g / 255.0f; gLightCol[2] = cl.b / 255.0f; gLightCol[3] = cl.a;
-            // reset alpha of ball
-            gAlphaValue = 0.3f;
-        }
+        // Arrow keys: discrete yaw/pitch for keyboard-only users.
+        // Q/E roll and W/A/S/D/Space/Shift movement are all handled
+        // via continuous glfwGetKey polling in the render loop.
+        if(key==GLFW_KEY_LEFT  && gDrone){ gDrone->addYaw(-5.0f); }
+        if(key==GLFW_KEY_RIGHT && gDrone){ gDrone->addYaw( 5.0f); }
+        if(key==GLFW_KEY_UP    && gDrone){ gDrone->addPitch( 3.0f); }
+        if(key==GLFW_KEY_DOWN  && gDrone){ gDrone->addPitch(-3.0f); }
         
         
     }
@@ -459,7 +438,7 @@ int main()
         glDisableVertexAttribArray(1);
         glVertexAttrib4f(1, r, g, b, a);
     };
-    glClearColor(0.1f,0.1f,0.1f,1.0f);
+    glClearColor(0.25f, 0.35f, 0.45f, 1.0f); // mid-blue sky placeholder
 
 
     //Creation of the 3D objcts starts here:
@@ -503,11 +482,63 @@ int main()
     
 
 
-    glfwSetKeyCallback(window,key_listener);
+    glfwSetKeyCallback(window, key_listener);
 
-    do{ 
+    // Drone init
+    gDrone = new Drone();
+    gDrone->createGLBuffers();
+    std::cout << "Drone initialized." << std::endl;
+
+    // Lock cursor for FPS-style mouse look; Escape releases in the loop.
+    glfwSetCursorPosCallback(window, cursor_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    float lastTime = (float)glfwGetTime();
+
+    do{
+        // --- Delta time -------------------------------------------------
+        float currentTime = (float)glfwGetTime();
+        float dt = currentTime - lastTime;
+        lastTime = currentTime;
+        if (dt > 0.1f) dt = 0.1f; // clamp to avoid huge jumps after a stall
+
+        // --- Continuous drone movement (held keys) ----------------------
+        if (gDrone) {
+            const float MOVE_SPEED = 5.0f;  // metres per second
+            const float ROLL_SPEED = 90.0f; // degrees per second
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                gDrone->moveForward( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                gDrone->moveForward(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                gDrone->moveRight(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                gDrone->moveRight( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+                gDrone->moveUp( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+                gDrone->moveUp(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+                gDrone->addRoll(-ROLL_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+                gDrone->addRoll( ROLL_SPEED * dt);
+
+            gDrone->update(dt);
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
+
+        // --- View-projection from drone camera --------------------------
+        glm::mat4 VP = gDrone
+            ? gDrone->getCamera().getViewProjection()
+            : glm::mat4(1.0f);
+
+        {
+            GLint mvpLoc = glGetUniformLocation(programID, "uMVP");
+            if (mvpLoc >= 0)
+                glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &VP[0][0]);
+        }
         
         // Set polygon mode based on wireframe toggle
         if(wireframeMode){
@@ -663,12 +694,30 @@ int main()
         }
         
 
+        // --- Draw drone -------------------------------------------------
+        if (gDrone) {
+            GLint loc;
+            loc = glGetUniformLocation(programID, "useColor");        if (loc >= 0) glUniform1i(loc, 0);
+            loc = glGetUniformLocation(programID, "useAlphaMap");     if (loc >= 0) glUniform1i(loc, 0);
+            loc = glGetUniformLocation(programID, "useDisplacement");  if (loc >= 0) glUniform1i(loc, 0);
+            loc = glGetUniformLocation(programID, "uBaseColor");       if (loc >= 0) glUniform4f(loc, 1.0f, 1.0f, 1.0f, 1.0f);
+            glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, 0);
+            glDisable(GL_CULL_FACE);
+            gDrone->draw(programID, VP);
+            glEnable(GL_CULL_FACE);
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }while(glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window));
 
-    delete floorCyl ;
+    delete floorCyl;
     delete ball;
+
+    delete gDrone;
+    gDrone = nullptr;
     }
 
     // Clean up directional light
