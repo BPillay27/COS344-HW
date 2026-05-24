@@ -16,18 +16,18 @@
 using namespace glm;
 using namespace std;
 
-#include "shapes/Square.h"
-#include "shapes/Cube.h"
-#include "shapes/Cylinder.h"
+#include "Shapes/Square.h"
+#include "Shapes/Cube.h"
+#include "Shapes/Cylinder.h"
 
-#include "shapes/Circle.h"
-#include "shapes/Cone.h"
-#include "shapes/TriangularPrism.h"
-#include "shapes/transformation.h"
-#include "shapes/SquarePyramid.h"
-#include "shapes/Sphere.h"
-#include "shapes/light.h"
-#include "shapes/Imported.h"
+#include "Shapes/Circle.h"
+#include "Shapes/Cone.h"
+#include "Shapes/TriangularPrism.h"
+#include "Shapes/transformation.h"
+#include "Shapes/SquarePyramid.h"
+#include "Shapes/Sphere.h"
+#include "Shapes/light.h"
+#include "Shapes/Imported.h"
 
 #include "Figure.h"
 #include "Shape3D.h"
@@ -260,14 +260,14 @@ int main() {
     glm::vec4 startTR( halfWidth_1,  halfHeight_1, centreZ_1, 1.0f);
     glm::vec4 startBL(halfWidth_1-1.0f, halfHeight_1-0.24f, centreZ_1, 1.0f);
     glm::vec4 startBR( halfWidth_1, halfHeight_1-0.24f, centreZ_1, 1.0f);
-    Square<4> start = Square(startTL, startTR, startBR, startBL);
+    Square<4> start = Square<4>(startTL, startTR, startBR, startBL);
 
     // Back Face (Farther rectangle to viewer: +0.025f)
     glm::vec4 startTL2(halfWidth_1-1.0f,  halfHeight_1, centreZ_1 + difference_1 , 1.0f);
     glm::vec4 startTR2( halfWidth_1,  halfHeight_1, centreZ_1 + difference_1 , 1.0f);
     glm::vec4 startBL2(halfWidth_1-1.0f, halfHeight_1-0.24f, centreZ_1 + difference_1 , 1.0f);
     glm::vec4 startBR2( halfWidth_1, halfHeight_1-0.24f, centreZ_1 + difference_1 , 1.0f);
-    Square<4> start2 = Square(startTL2, startTR2, startBR2, startBL2);
+    Square<4> start2 = Square<4>(startTL2, startTR2, startBR2, startBL2);
 
     Cube<4>* Turf = new Cube<4>(start, start2);
     Turf->setColour(9, 139, 74); // Green

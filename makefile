@@ -1,6 +1,6 @@
 CXX      = g++
 CXXFLAGS = -std=c++11 -Wall -O2
-LIBS     = -lglfw -lGLEW -lGL
+LIBS     = -lglfw -lGLEW -lGL -lassimp
 
 # GLM: prefer the system package (apt install libglm-dev);
 # fall back to the copy that CMake FetchContent downloaded.
