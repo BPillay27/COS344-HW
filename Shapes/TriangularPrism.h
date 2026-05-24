@@ -34,6 +34,7 @@ public:
     
     void print() const;
     std::string fprint() const;
+    GLenum glDrawMode() const;
     void zoom(int percent);
     void rotate(int degrees);
 };

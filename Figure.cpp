@@ -6,28 +6,60 @@ Figure::Figure() : rotationAxisStart1({0.0f, 0.0f, 0.0f, 1.0f}), rotationAxisEnd
 }
 
 Figure::~Figure() {
-    for (auto& shape : shapes) {
-        delete shape;
+    for (auto& child : children) {
+        delete child;
     }
-    shapes.clear();
+    children.clear();
 }
 
+// --- Composite Specific Additions ---
+void Figure::addObject(Object* obj) {
+    if (obj) {
+        children.push_back(obj);
+    }
+}
+
+Object* Figure::getObject(int index) const {
+    if (index >= 0 && index < children.size()) {
+        return children[index];
+    }
+    return nullptr;
+}
+
+int Figure::getNumObjects() const {
+    return children.size();
+}
+
+// --- Legacy Shape Wrappers ---
 void Figure::addShape(Shape<4>* shape) {
     if (shape) {
-        Shape3D* dumby=new Shape3D(shape);
-        shapes.push_back(dumby);
+        Shape3D* dumby = new Shape3D(shape);
+        children.push_back(dumby); // Stored polymorphically as Object*
     }
 }
 
 void Figure::addShape3D(Shape3D* shape3d) {
     if (shape3d) {
-        shapes.push_back(shape3d);
+        children.push_back(shape3d);
     }
 }
 
+int Figure::getNumShapes() const {
+    return children.size();
+}
+
+Shape3D* Figure::getShape(int index) const {
+    if (index >= 0 && index < children.size()) {
+        // dynamic_cast ensures LayoutReader safely ignores nested Figures
+        // returning nullptr if the child at this index is not a Shape3D leaf.
+        return dynamic_cast<Shape3D*>(children[index]);
+    }
+    return nullptr;
+}
+
+// --- Transformations & Operations ---
+
 void Figure::rotate(int degrees) {
-
-
     glm::vec3 rotationAxisStart = glm::vec3(rotationAxisStart1[0], rotationAxisStart1[1], rotationAxisStart1[2]);
     glm::vec3 rotationAxisEnd = glm::vec3(rotationAxisEnd1[0], rotationAxisEnd1[1], rotationAxisEnd1[2]);
     glm::vec3 V = rotationAxisEnd - rotationAxisStart;
@@ -95,51 +127,56 @@ void Figure::rotate(int degrees) {
     // R = T(P0) * Rx(-θx) * Ry(-θy) * Rz(θ) * Ry(θy) * Rx(θx) * T(-P0)
     glm::mat4 finalRot = T_pos * Rx_inv * Ry_inv * Rz * Ry_1 * Rx_1 * T_neg;
     
-    for (auto& shape : shapes) {
-        *shape *= finalRot;
+    for (auto& child : children) {
+        // Falls back to runtime evaluation if Object lacks pure virtuals for matrix mults
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) {
+            *s *= finalRot;
+        } else if (Figure* f = dynamic_cast<Figure*>(child)) {
+            *f *= finalRot;
+        }
     }
 }
 
 void Figure::rotateX(int degrees) {
-
     glm::mat4 trans = rotx<4>(degrees);
     rotationAxisEnd1 = glm::vec4(trans * glm::vec4(rotationAxisEnd1));
     rotationAxisStart1 = glm::vec4(trans * glm::vec4(rotationAxisStart1));
     position = glm::vec4(trans * glm::vec4(position));
 
-    for (auto& shape : shapes) {
-        shape->rotateX(degrees);
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->rotateX(degrees);
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->rotateX(degrees);
     }
 }
 
 void Figure::rotateY(int degrees) {
-
     glm::mat4 trans = roty<4>(degrees);
     rotationAxisEnd1 = glm::vec4(trans * glm::vec4(rotationAxisEnd1));
     rotationAxisStart1 = glm::vec4(trans * glm::vec4(rotationAxisStart1));
     position = glm::vec4(trans * glm::vec4(position));
 
-    for (auto& shape : shapes) {
-        shape->rotateY(degrees);
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->rotateY(degrees);
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->rotateY(degrees);
     }
 }
 
 void Figure::rotateZ(int degrees) {
-
-
     glm::mat4 trans = rotz<4>(degrees);
     rotationAxisEnd1 = glm::vec4(trans * glm::vec4(rotationAxisEnd1));
     rotationAxisStart1 = glm::vec4(trans * glm::vec4(rotationAxisStart1));
     position = glm::vec4(trans * glm::vec4(position));
 
-    for (auto& shape : shapes) {
-        shape->rotateZ(degrees);
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->rotateZ(degrees);
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->rotateZ(degrees);
     }
 }
 
 void Figure::move(float x, float y, float z) {
-    for (auto& shape : shapes) {
-        shape->move(x, y, z);
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->move(x, y, z);
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->move(x, y, z);
     }
     glm::mat4 trans = translation<4>(x, y, z);
     rotationAxisEnd1 = glm::vec4(trans * glm::vec4(rotationAxisEnd1));
@@ -148,14 +185,19 @@ void Figure::move(float x, float y, float z) {
 }
 
 void Figure::zoom(int percent) {
-    for (auto& shape : shapes) {
-        shape->zoom(percent);
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->zoom(percent);
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->zoom(percent);
     }
 }
 
 Figure& Figure::operator*=(const glm::mat4& transform) {
-    for (auto& shape : shapes) {
-        *shape *= transform;
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) {
+            *s *= transform;
+        } else if (Figure* f = dynamic_cast<Figure*>(child)) {
+            *f *= transform;
+        }
     }
 
     rotationAxisEnd1 = glm::vec4(transform * glm::vec4(rotationAxisEnd1));
@@ -165,26 +207,21 @@ Figure& Figure::operator*=(const glm::mat4& transform) {
 }
 
 void Figure::draw() {
-    for (auto& shape : shapes) {
-        shape->draw();
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->draw();
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->draw();
     }
 }
 
 void Figure::setShapeColour(int r, int g, int b, float a) {
-    for (auto& shape : shapes) {
-        shape->setColour(r, g, b, a);
+    for (auto& child : children) {
+        // Accounts for the naming difference: Shape3D uses setColour, Figure uses setShapeColour
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) {
+            s->setColour(r, g, b, a);
+        } else if (Figure* f = dynamic_cast<Figure*>(child)) {
+            f->setShapeColour(r, g, b, a);
+        }
     }
-}
-
-int Figure::getNumShapes() const {
-    return shapes.size();
-}
-
-Shape3D* Figure::getShape(int index) {
-    if (index >= 0 && index < shapes.size()) {
-        return shapes[index];
-    }
-    return nullptr;
 }
 
 void Figure::setPositionOffset(float x, float y, float z) {
@@ -197,16 +234,15 @@ void Figure::setRotationAxis(float x1, float y1, float z1, float x2, float y2, f
 }
 
 void Figure::createGLBuffers() {
-    for (auto& shape : shapes) {
-        shape->createGLBuffers();
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->createGLBuffers();
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->createGLBuffers();
     }
 }
 
 void Figure::updateGLBuffers() {
-    for (auto& shape : shapes) {
-        shape->updateGLBuffers();
+    for (auto& child : children) {
+        if (Shape3D* s = dynamic_cast<Shape3D*>(child)) s->updateGLBuffers();
+        else if (Figure* f = dynamic_cast<Figure*>(child)) f->updateGLBuffers();
     }
 }
-
-
-

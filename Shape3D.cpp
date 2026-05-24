@@ -112,6 +112,12 @@ void Shape3D::setColour(int r, int g, int b, float a) {
     }
 }
 
+void Shape3D::setShininess(float s) {
+    if (shape) {
+        shape->setShininess(s);
+    }
+}
+
 Shape<4>* Shape3D::getShape() const {
     return shape;
 }

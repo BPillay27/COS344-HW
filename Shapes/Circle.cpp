@@ -115,7 +115,9 @@ int Circle<n>::getNumPoints() const{
 template<int n>
 void Circle<n>::print() const{
     std::cout << "_ Center _ " << std::endl;
-    center.print();
+    std::cout << "Center: (" << center[0];
+    for(int i = 1; i < n; i++) std::cout << ", " << center[i];
+    std::cout << ")" << std::endl;
     std::cout << "_ Radius _ " << std::endl;
     std::cout << radius << std::endl;
 }
@@ -158,7 +160,10 @@ GLenum Circle<n>::glDrawMode() const {
     return GL_TRIANGLE_FAN;
 }
 
-
+template<int n>
+void Circle<n>::createGLBuffers(GLenum usage){
+    Shape<n>::createGLBuffers(usage);
+}
 
 template<int n>
 void Circle<n>::draw(){

@@ -74,6 +74,10 @@ float gLightRange = 5.0f;
 // Light follow flag: when true, light follows sphere center; when false, light moves independently
 bool gLightFollowBall = true;
 
+// Global camera state for Blinn-Phong lighting
+glm::vec3 gCameraPos = glm::vec3(0.0f, 2.0f, 5.0f);  // Default camera position
+float gShininess = 32.0f;  // Blinn-Phong shininess factor
+
 // Colour palette and indices for floor, ball, and light
 struct Colour {
     int r,g,b; 
@@ -173,6 +177,9 @@ void key_listener(GLFWwindow* window, int key, int scancode, int action, int mod
         }
         if(key==GLFW_KEY_M){ // toggle alpha map
             gUseAlphaMap = !gUseAlphaMap;
+        }
+        if(key==GLFW_KEY_I){ // toggle grayscale filter
+            gUseGrayscale = !gUseGrayscale;
         }
 
         // Colour cycling keys (choose two per object: prev/next)
@@ -453,6 +460,9 @@ int main()
         Sphere<4>* ball = new Sphere<4>({0.0f, alignedy + radius + 0.01f, 0.0f, 1.0f}, radius, 6, 8);
         gBallPtr = ball;
 
+        // Store texture filenames with the ball for serialization
+        ball->setTextureMap("Textures/colour/colour.png", "Textures/alpha/alpha.png", "Textures/displacement/displacement.png");
+
         Figure planed=Figure();
         planed.addShape(floorCyl);
 
@@ -588,6 +598,17 @@ int main()
                 glUniform1f(locRange, gPointLight->getRange());
             }
         }
+        
+        // Set Blinn-Phong material properties (camera position and shininess)
+        GLint locCameraPos = glGetUniformLocation(programID, "uCameraPos");
+        if (locCameraPos != -1) {
+            glUniform3f(locCameraPos, gCameraPos.x, gCameraPos.y, gCameraPos.z);
+        }
+        
+        GLint locShininess = glGetUniformLocation(programID, "uShininess");
+        if (locShininess != -1) {
+            glUniform1f(locShininess, gShininess);
+        }
 
         if (gBallPtr && (gPendingBallStacksDelta != 0 || gPendingBallSlicesDelta != 0)) {
             int newStacks = gBallPtr->stacks + gPendingBallStacksDelta;
@@ -615,6 +636,16 @@ int main()
                 loc = glGetUniformLocation(programID, "useColor"); if (loc != -1) glUniform1i(loc, 0);
                 loc = glGetUniformLocation(programID, "useAlphaMap"); if (loc != -1) glUniform1i(loc, 0);
                 loc = glGetUniformLocation(programID, "useDisplacement"); if (loc != -1) glUniform1i(loc, 0);
+                
+                // Set shape-specific shininess
+                if (sd) {
+                    loc = glGetUniformLocation(programID, "uShininess");
+                    if (loc != -1) glUniform1f(loc, sd->getShape()->getShininess());
+                    
+                    // Update vertex attribute color before drawing
+                    sd->getShape()->updateVertexColourAttribute();
+                }
+                
                 glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, 0);
@@ -635,7 +666,12 @@ int main()
                 loc = glGetUniformLocation(programID, "useColor"); if (loc != -1) glUniform1i(loc, gUseColor ? 1 : 0);
                 loc = glGetUniformLocation(programID, "useAlphaMap"); if (loc != -1) glUniform1i(loc, gUseAlphaMap ? 1 : 0);
                 loc = glGetUniformLocation(programID, "useDisplacement"); if (loc != -1) glUniform1i(loc, gUseDisplacement ? 1 : 0);
+                loc = glGetUniformLocation(programID, "useGrayscale"); if (loc != -1) glUniform1i(loc, gUseGrayscale ? 1 : 0);
                 loc = glGetUniformLocation(programID, "displacementScale"); if (loc != -1) glUniform1f(loc, gDisplacementScale);
+                
+                // Set shape-specific shininess
+                loc = glGetUniformLocation(programID, "uShininess");
+                if (loc != -1) glUniform1f(loc, sd->getShape()->getShininess());
 
                 loc = glGetUniformLocation(programID, "uBaseColor");
                 if (loc != -1) {
@@ -647,6 +683,10 @@ int main()
                     glUniform4fv(loc, 1, baseCol);
                     delete[] col;
                 }
+                
+                // Update vertex attribute color before drawing
+                sd->getShape()->updateVertexColourAttribute();
+                
                 glDepthMask(GL_FALSE);
                 s->draw();
                 glDepthMask(GL_TRUE);

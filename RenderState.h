@@ -5,6 +5,7 @@
 extern bool gUseColor;
 extern bool gUseAlphaMap;
 extern bool gUseDisplacement;
+extern bool gUseGrayscale;
 extern float gAlphaValue;
 extern float gDisplacementScale;
 
