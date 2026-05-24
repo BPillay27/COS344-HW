@@ -90,6 +90,34 @@ int Square<n>::getNumPoints() const{
     return 4*n;
 }
 
+template <int n>
+float* Square<n>::getNormals() const{
+    float* result = new float[12];
+
+    glm::vec<n, float> edge1 = tr - tl;
+    glm::vec<n, float> edge2 = br - tl;
+    glm::vec3 normal = glm::cross(glm::vec3(edge2), glm::vec3(edge1));
+    float length = glm::length(normal);
+    if (length > 0.0f) {
+        normal /= length;
+    } else {
+        normal = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    for (int vertex = 0; vertex < 4; ++vertex) {
+        for (int component = 0; component < 3; ++component) {
+            result[vertex * 3 + component] = normal[component];
+        }
+    }
+
+    return result;
+}
+
+template <int n>
+int Square<n>::getNumNormals() const{
+    return 12;
+}
+
 template<int n>
 void Square<n>::zoom(int percent){
     float factor = percent / 100.0f;
@@ -138,8 +166,9 @@ void Square<n>::draw() {
     if (this->VAO == 0u) this->createGLBuffers();
     int verts = getNumPoints() / n;
     glBindVertexArray(this->VAO);
-    glDisableVertexAttribArray(1);
-    glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
+    // Attribute 3 is per-vertex color in the shader. Keep it constant per-square.
+    glDisableVertexAttribArray(3);
+    glVertexAttrib3f(3, this->colour[0], this->colour[1], this->colour[2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, verts);
     glBindVertexArray(0);
 }

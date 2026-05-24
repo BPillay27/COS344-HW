@@ -26,6 +26,8 @@ class Square: public Shape<n> {
         virtual Square<n>* operator*(const glm::mat<n,n,float>&) const;
         virtual float* getPoints() const;
         virtual int getNumPoints() const;
+        virtual float* getNormals() const override;
+        virtual int getNumNormals() const override;
 
         virtual void print() const{
             auto printVec = [](const char* label, const glm::vec<n,float>& v){
