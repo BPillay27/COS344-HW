@@ -42,7 +42,7 @@ void main() {
     float ndotl = max(0.0, dot(N, L));
     
     // Ambient lighting (visible even in shadows)
-    vec3 ambientLight = vec3(0.45);
+    vec3 ambientLight = vec3(0.7);
     
     // Directional light contribution
     vec3 directionalLight = uLightColor * (ndotl * uLightIntensity);

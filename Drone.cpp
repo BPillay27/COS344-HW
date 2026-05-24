@@ -51,7 +51,7 @@ void Drone::assembleParts() {
     // --- Arms (4 diagonal cylinders, white) ---------------------------------
     // Arm tips are at (±0.34, 0, ±0.34) — 45-degree diagonals.
     // Arms start at the body corners (±0.13, 0, ±0.09).
-    const float ARM_RADIUS  = 0.022f;
+    const float ARM_RADIUS  = 0.030f;
     const int   ARM_SEG     = 12;
 
     struct ArmDef { glm::vec4 start; glm::vec4 end; };
@@ -84,31 +84,45 @@ void Drone::assembleParts() {
     for (int i = 0; i < 4; ++i) {
         glm::vec4 mc(tipXZ[i].x, MOTOR_HEIGHT * 0.5f, tipXZ[i].z, 1.0f);
         Cylinder<4>* motor = new Cylinder<4>(mc, MOTOR_RADIUS, MOTOR_HEIGHT, MOTOR_SEG, 1);
-        motor->setColour(200, 200, 203);
+        motor->setColour(60, 60, 65);
         staticParts.addShape(motor);
     }
 
-    // --- Propellers (thin flat cylinders, one per prop Figure) --------------
-    // Each prop hub sits just above its motor top.
-    // We give alternating props a slightly different grey so they are visually distinct.
-    const float PROP_RADIUS = 0.19f;
-    const float PROP_HEIGHT = 0.010f;
-    const int   PROP_SEG    = 24;
-    const float PROP_Y      = MOTOR_HEIGHT + 0.008f; // just above motor top
+    // --- Propellers (two crossed thin blade cubes per motor) ----------------
+    // Each prop is two flat Cube blades arranged in a + cross, sitting just
+    // above the motor top.  Alternating pairs are orange vs dark grey to
+    // match a real photography drone.
+    const float PROP_LENGTH = 0.38f;   // full span tip-to-tip
+    const float PROP_CHORD  = 0.048f;  // blade width (chord)
+    const float PROP_THICK  = 0.009f;  // blade thickness
+    const float PROP_Y      = MOTOR_HEIGHT + 0.010f;
 
     int propColors[4][3] = {
-        { 55,  55,  55},
-        {180,  80,  20},
-        {180,  80,  20},
-        { 55,  55,  55},
+        { 50,  50,  54},   // FL: dark grey
+        {185,  75,  15},   // FR: orange
+        {185,  75,  15},   // BL: orange
+        { 50,  50,  54},   // BR: dark grey
     };
 
     for (int i = 0; i < 4; ++i) {
         propCenters[i] = glm::vec3(tipXZ[i].x, PROP_Y, tipXZ[i].z);
         glm::vec4 pc(propCenters[i].x, propCenters[i].y, propCenters[i].z, 1.0f);
-        Cylinder<4>* blade = new Cylinder<4>(pc, PROP_RADIUS, PROP_HEIGHT, PROP_SEG, 1);
-        blade->setColour(propColors[i][0], propColors[i][1], propColors[i][2]);
-        props[i].addShape(blade);
+
+        // Blade A: runs along the X axis
+        Cube<4>* bladeA = new Cube<4>(pc, PROP_THICK, PROP_LENGTH, PROP_CHORD);
+        bladeA->setColour(propColors[i][0], propColors[i][1], propColors[i][2]);
+        props[i].addShape(bladeA);
+
+        // Blade B: runs along the Z axis (perpendicular to A)
+        Cube<4>* bladeB = new Cube<4>(pc, PROP_THICK, PROP_CHORD, PROP_LENGTH);
+        bladeB->setColour(propColors[i][0], propColors[i][1], propColors[i][2]);
+        props[i].addShape(bladeB);
+
+        // Small hub cap in the centre, stays with the spinning figure
+        glm::vec4 hc(pc.x, pc.y + 0.008f, pc.z, 1.0f);
+        Cylinder<4>* hub = new Cylinder<4>(hc, 0.018f, 0.014f, 10, 1);
+        hub->setColour(28, 28, 32);
+        props[i].addShape(hub);
     }
 
     // --- Landing gear -------------------------------------------------------
@@ -224,14 +238,27 @@ void Drone::draw(GLuint shaderID, const glm::mat4& VP) {
 // 6-DOF movement
 // ---------------------------------------------------------------------------
 
+// W/S: always move horizontally in the yaw direction, ignoring pitch and roll.
+// This keeps altitude constant so Space/Shift are the only way to go up/down,
+// making all three translation axes clearly distinct for the rubric demo.
 void Drone::moveForward(float delta) {
-    worldPosition += getForward() * delta;
+    glm::vec3 fwd = getForward();
+    fwd.y = 0.0f;
+    float len = glm::length(fwd);
+    if (len > 0.001f) fwd /= len;   // re-normalise after zeroing Y
+    worldPosition += fwd * delta;
 }
 
+// A/D: horizontal strafe, also ignoring roll so it stays in the XZ plane.
 void Drone::moveRight(float delta) {
-    worldPosition += getRight() * delta;
+    glm::vec3 right = getRight();
+    right.y = 0.0f;
+    float len = glm::length(right);
+    if (len > 0.001f) right /= len;
+    worldPosition += right * delta;
 }
 
+// Space/Shift: pure world-Y movement, completely independent of orientation.
 void Drone::moveUp(float delta) {
     worldPosition.y += delta;
 }
@@ -291,10 +318,11 @@ glm::vec3 Drone::getUp() const {
 void Drone::updateCamera() {
     glm::mat4 model = buildModelMatrix();
 
-    // Gimbal position in local space: slightly below and in front of body.
-    glm::vec4 localEye   ( 0.0f, -0.07f, -0.09f, 1.0f);
-    glm::vec4 localTarget( 0.0f, -0.07f, -10.0f, 1.0f);
-    glm::vec4 localUp    ( 0.0f,  1.0f,   0.0f,  0.0f);
+    // Third-person chase camera: 1.8 m behind the drone, 0.35 m above
+    // centre, looking slightly ahead so the body fills the lower frame.
+    glm::vec4 localEye   ( 0.0f,  0.35f,  1.8f, 1.0f);
+    glm::vec4 localTarget( 0.0f,  0.05f, -1.0f, 1.0f);
+    glm::vec4 localUp    ( 0.0f,  1.0f,   0.0f, 0.0f);
 
     glm::vec3 eye    = glm::vec3(model * localEye);
     glm::vec3 target = glm::vec3(model * localTarget);
