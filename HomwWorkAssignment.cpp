@@ -28,6 +28,7 @@ using namespace std;
 #include "shapes/Sphere.h"
 #include "shapes/light.h"
 
+
 #include "Figure.h"
 #include "Shape3D.h"
 #include "RenderState.h"
@@ -369,6 +370,18 @@ int main() {
     rightRaised->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
     walls_1->addShape(rightRaised);
 
+    Imported<4>* dogModel = new Imported<4>("Hole_1_Dog.glb");
+    Shape3D* dogShape = new Shape3D(dogModel);
+    dogShape->zoom(-80);
+    float dogX = 0.5f;                               // Matches cylinderCenter_1 X
+    float dogY = turfTopY_1 + cylinderRadius_1;      // Cylinder Center Y + Radius = Top of cylinder
+    float dogZ = turfMidZ_1 + cylinderBackOffsetZ_1;
+
+    dogShape->move(dogX, dogY, dogZ);
+    Figure* dogFigure = new Figure();
+    dogFigure->addShape3D(dogShape);
+
+    scene.addObject(dogFigure);
     scene.addObject(holeFigure_1); // Add the hole figure to the scene so it renders as a black hole in the turf
     scene.addObject(turf_1);
     scene.addObject(walls_1);
