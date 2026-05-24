@@ -8,6 +8,10 @@ uniform sampler2D displacementMap;
 uniform bool useDisplacement;
 uniform float displacementScale;
 
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProjection;
+
 // Camera uniform for view direction
 uniform vec3 uCameraPos;
 
@@ -96,5 +100,5 @@ void main() {
     
     VertexColor = finalColor;
 
-    gl_Position = vec4(newPos, 1.0);
+    gl_Position = uProjection * uView * uModel * vec4(newPos, 1.0);
 }

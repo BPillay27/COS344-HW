@@ -29,13 +29,21 @@ class Square: public Shape<n> {
 
         virtual void print() const{
             std::cout << "_ P1 _ " << std::endl;
-            tl.print();
+            std::cout << "TL: (" << tl[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << tl[i];
+            std::cout << ")" << std::endl;
             std::cout << "_ P2 _ " << std::endl;
-            tr.print();
+            std::cout << "TR: (" << tr[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << tr[i];
+            std::cout << ")" << std::endl;
             std::cout << "_ P3 _ " <<std::endl;
-            br.print();
+            std::cout << "BR: (" << br[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << br[i];
+            std::cout << ")" << std::endl;
             std::cout << "_ P4 _ " << std::endl;
-            bl.print();
+            std::cout << "BL: (" << bl[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << bl[i];
+            std::cout << ")" << std::endl;
         }
         virtual std::string fprint() const;
         void zoom(int percent);

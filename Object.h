@@ -21,6 +21,9 @@ public:
 
     virtual void createGLBuffers()=0;
     virtual void updateGLBuffers()=0;
+    
+    // Position getter
+    glm::vec4 getPosition() const { return position; }
 };
 
 #endif // OBJECT_H

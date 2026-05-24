@@ -36,6 +36,8 @@ using namespace std;
 // Global spatial hash for efficient object queries
 // Cell size 2.5f creates 8x8 = 64 cells (quadrants with 4 subdivisions each)
 SpatialHash* gSpatialHash = nullptr;
+Figure scene = Figure();
+//bool gUseGrayscale = false ; <- Was not needed
 
 
 #if defined(__has_include)
@@ -159,9 +161,7 @@ void renderObjects(GLuint programID, glm::mat4 view) {
     
     // Render other objects
     // TODO: Add your object rendering here
-    // cube.render(programID);
-    // sphere.render(programID);
-    // etc.
+    scene.draw();
 }
 
 int main()
@@ -211,71 +211,87 @@ int main()
     gSpatialHash = new SpatialHash(2.5f);
     
     // TODO: Add your objects here and insert them into the spatial hash
-    // Example:
-    // Sphere<4> ball(1.0f);
-    // Figure figure(&ball, glm::vec3(0.0f, 0.0f, 0.0f));
-    // int objectID = 0;
-    // gSpatialHash->insert(objectID++, ball.getPosition());
+    glm::vec4 frontCenter(0.0f, 0.0f, 0.0f, 1.0f);
+    Square<4> frontFace(frontCenter, 2.0f, 5.0f);
+    frontFace.setColour(255, 0, 0, 1.0f);
+
+    glm::vec4 backCenter(0.0f, 0.0f, -3.0f, 1.0f);
+    Square<4> backFace(backCenter, 2.0f, 5.0f);
+    Cube<4>* rectangularPrism = new Cube<4>(frontFace, backFace);
+    scene.addShape(rectangularPrism);
     
-	// Start object initialisation here
+    int prismID = scene.getNumShapes() - 1;
 
+    glm::vec3 hashPosition(
+        (frontCenter.x + backCenter.x) / 2.0f,
+        (frontCenter.y + backCenter.y) / 2.0f,
+        (frontCenter.z + backCenter.z) / 2.0f
+    );
 
+    if (gSpatialHash != nullptr) {
+        gSpatialHash->insert(prismID, hashPosition);
+    }
+
+    scene.createGLBuffers();
     
     do {
         // Handle camera movement using key listener
-        if (keyState.W)
-            cameraPos += cameraSpeed * glm::normalize(cameraTarget - cameraPos);
-        if (keyState.S)
-            cameraPos -= cameraSpeed * glm::normalize(cameraTarget - cameraPos);
-        if (keyState.A)
-            cameraPos -= cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
-        if (keyState.D)
-            cameraPos += cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
+        if (keyState.W) cameraPos += cameraSpeed * glm::normalize(cameraTarget - cameraPos);
+        if (keyState.S) cameraPos -= cameraSpeed * glm::normalize(cameraTarget - cameraPos);
+        if (keyState.A) cameraPos -= cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
+        if (keyState.D) cameraPos += cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
         
-        // Update view matrix with new camera position
         glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, upVector);
-        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // Set grayscale uniform
         GLint grayscaleLoc = glGetUniformLocation(programID, "useGrayscale");
         if (grayscaleLoc != -1) glUniform1i(grayscaleLoc, gUseGrayscale ? 1 : 0);
+
+        // Upload Model and Normal Matrix data for the shaders
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(view * model)));
+        glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
         
-        // Render mini-map in bottom right corner using scissor test
+        // ==================== 1. Render Main View FIRST ====================
+        glViewport(0, 0, 1000, 1000); // CRITICAL: Reset the drawing area to full screen!
+        glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
+        renderObjects(programID, view);
+        
+       // ==================== 2. Render Mini-Map ====================
         glEnable(GL_SCISSOR_TEST);
-        glScissor(750, 0, 250, 250);  // Bottom right corner: 250x250 pixels
+        glScissor(750, 0, 250, 250);  
+        glViewport(750, 0, 250, 250); 
         glClear(GL_DEPTH_BUFFER_BIT);
         
-        // Set orthogonal projection and top-down view for mini-map
         glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(orthogonalProjection));
+        
+        // Track the main camera's X and Z position, but hover high up at Y=10
+        glm::vec3 miniMapPos = glm::vec3(cameraPos.x, 10.0f, cameraPos.z);
+        glm::vec3 miniMapTarget = glm::vec3(cameraPos.x, 0.0f, cameraPos.z); 
+
         glm::mat4 miniMapView = glm::lookAt(
-            glm::vec3(0.0f, 10.0f, 0.0f),  // Look from above
-            glm::vec3(0.0f, 0.0f, 0.0f),   // Look at origin
-            glm::vec3(0.0f, 0.0f, -1.0f)   // Up vector pointing towards negative Z
+            miniMapPos,      // Hover above the player
+            miniMapTarget,   // Look straight down at the player
+            glm::vec3(0.0f, 0.0f, -1.0f)   // Keep the "Up" orientation aligned
         );
+        
+        // Recalculate Normal Matrix for Mini-Map angle
+        glm::mat3 miniMapNormal = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
+        glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(miniMapNormal));
+        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(miniMapView));
+
         renderObjects(programID, miniMapView);
         
         glDisable(GL_SCISSOR_TEST);
-        
-        // Example: Query spatial hash for nearby objects at camera position
-        // This demonstrates hierarchical spatial partitioning
-        if (gSpatialHash) {
-            std::vector<int> nearbyObjects = gSpatialHash->queryNearby(cameraPos);
-            // nearbyObjects contains IDs of all objects in nearby cells (3x3x3 cube)
-            // Use this for collision detection, culling, or other spatial queries
-        }
-        
-        // Render main view
-        glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
-        view = glm::lookAt(cameraPos, cameraTarget, upVector);
-        renderObjects(programID, view);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
         
     } while (!glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS);
-    
+
+
     // Clean up spatial hash
     if (gSpatialHash) {
         delete gSpatialHash;

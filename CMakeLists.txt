@@ -47,6 +47,7 @@ set(COMMON_SOURCES
     "Shape3D.cpp"
     "shader.cpp"
     "SpatialHash.cpp"
+    "LayoutReader.cpp"
     "Shapes/light.cpp"
 )
 

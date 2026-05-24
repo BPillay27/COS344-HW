@@ -13,26 +13,23 @@ uniform bool useAlphaMap;       // Toggle for alphaMap
 uniform bool useGrayscale;      // Toggle for grayscale filter
 
 void main() {
-
-    vec4 result = uBaseColor;
+    // Default to solid white so vertex colors multiply correctly
+    vec4 result = vec4(1.0, 1.0, 1.0, 1.0);
 
     if (useColor) {
         vec4 sampledTex = texture(colorMap, TexCoords);
         result.rgb *= sampledTex.rgb;
     }
 
-
     if (useAlphaMap) {
         float maskValue = texture(alphaMap, TexCoords).r;
-
     }
 
-    // Apply CPU per-vertex color (lighting) only — no GPU lighting calculations.
+    // Apply CPU per-vertex color
     result.rgb *= VertexColor;
-    
+
     // Apply grayscale filter if enabled
     if (useGrayscale) {
-        // Standard NTSC/REC.709 weights for human perception
         float gray = dot(result.rgb, vec3(0.2126, 0.7152, 0.0722));
         result.rgb = vec3(gray);
     }

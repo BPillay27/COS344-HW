@@ -26,11 +26,17 @@ class Triangle: public Shape<n> {
 
         virtual void print() const{
             std::cout << "_ P1 _ " << std::endl;
-            p1.print();
+            std::cout << "P1: (" << p1[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << p1[i];
+            std::cout << ")" << std::endl;
             std::cout << "_ P2 _ " << std::endl;
-            p2.print();
+            std::cout << "P2: (" << p2[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << p2[i];
+            std::cout << ")" << std::endl;
             std::cout << "_ P3 _ " << std::endl;
-            p3.print();
+            std::cout << "P3: (" << p3[0];
+            for(int i = 1; i < n; i++) std::cout << ", " << p3[i];
+            std::cout << ")" << std::endl;
         }
         virtual std::string fprint() const;
         void zoom(int percent);
