@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for HomwWorkAssignment, include source and define
+﻿﻿# CMakeList.txt : CMake project for HomwWorkAssignment, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.10)
@@ -45,8 +45,6 @@ set(COMMON_SOURCES
     "Object.cpp"
     "RenderState.cpp"
     "Shape3D.cpp"
-    "Drone.cpp"
-    "Camera.cpp"
     "shader.cpp"
     "SpatialHash.cpp"
     "LayoutReader.cpp"

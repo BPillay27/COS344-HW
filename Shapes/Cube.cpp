@@ -198,10 +198,6 @@ GLenum Cube<n>::glDrawMode() const {
 
 template<int n>
 void Cube<n>::print() const{
-	std::cout << "_ Cube Center _" << std::endl;
-	std::cout << "Center: (" << center[0];
-	for(int i = 1; i < n; i++) std::cout << ", " << center[i];
-	std::cout << ")" << std::endl;
 	std::cout << "_ Cube Center _ ";
 	for (int i = 0; i < n; ++i) std::cout << center[i] << " ";
 	std::cout << std::endl;
