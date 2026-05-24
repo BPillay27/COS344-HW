@@ -20,6 +20,7 @@ uniform float uPointLightIntensity;
 uniform float uPointLightRange;
 
 uniform mat3 uNormalMatrix;
+uniform mat4 uMVP;
 
 out vec2 TexCoords;
 out vec3 VertexColor;
@@ -72,5 +73,5 @@ void main() {
     
     VertexColor = finalColor;
 
-    gl_Position = vec4(newPos, 1.0);
+    gl_Position = uMVP * vec4(newPos, 1.0);
 }
