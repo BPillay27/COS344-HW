@@ -102,6 +102,7 @@ void Shape3D::zoom(int percent) {
 
 void Shape3D::draw() {
     if (shape) {
+        shape->updateVertexColourAttribute(); // apply this shape's stored colour to GL state before drawing
         shape->draw();
     }
 }

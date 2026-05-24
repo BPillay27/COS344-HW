@@ -150,13 +150,17 @@ int Cube<n>::getNumPoints() const{
 
 template<int n>
 void Cube<n>::draw(){
-	// Delegate drawing to each face so faces' own EBOs/VAOs are used
-	f1.draw();
-	f2.draw();
-	f3.draw();
-	f4.draw();
-	f5.draw();
-	f6.draw();
+	// Cube has no VAO of its own — it delegates to six Square faces,
+	// each with its own VAO.  Before drawing each face we must push the
+	// cube's stored colour into the global glVertexAttrib constant at
+	// location 3, because glVertexAttrib3f is global state (not per-VAO)
+	// and the last createGLBuffers() call may have left a stale colour.
+	f1.updateVertexColourAttribute(); f1.draw();
+	f2.updateVertexColourAttribute(); f2.draw();
+	f3.updateVertexColourAttribute(); f3.draw();
+	f4.updateVertexColourAttribute(); f4.draw();
+	f5.updateVertexColourAttribute(); f5.draw();
+	f6.updateVertexColourAttribute(); f6.draw();
 }
 
 template<int n>

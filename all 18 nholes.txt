@@ -1,0 +1,19 @@
+Hole  Segments (tee to cup)                                          Key obstacles
+1     FLAT, BUMP, FLAT                                               Dog statue on bump
+2     FLAT, BUMP, FLAT, RAMP_UP, FLAT                                Frog statue
+3     FLAT                                                           Dog statue, rock
+4     FLAT, TWO_LEVEL_DROP, FLAT                                     Tri prisms, displacement cylinder
+5     FLAT, RAMP_UP, FLAT, RAMP_DOWN, FLAT                           Windmill (Prac 3 import, replaces pitbull)
+6     FLAT, BUMP, FLAT                                               (none, terrain only)
+7     FLAT, RAMP_DOWN, FLAT, BUMP, FLAT                              Two wooden planks on the slope
+8     FLAT, BUMP, FLAT, BUMP, FLAT                                   Brick border
+9     FLAT, RAMP_UP, FLAT                                            Tiny human statue
+10    FLAT                                                           Two triangle deflectors, dog statue
+11    FLAT, CLIFF_DOWN, FLAT, RAMP_DOWN, FLAT                        Two V-concrete structures
+12    FLAT, RAMP_UP, FLAT                                            Tri prism, damaged bus statue
+13    FLAT, WATER, FLAT                                              Pumpkin, dove, corner tri prisms
+14    FLAT, RAMP_UP, FLAT, RAMP_DOWN, FLAT                           Pumpkin sphere
+15    FLAT, BRIDGE_OVER_WATER, FLAT                                  Frog statue, tri prisms
+16    FLAT, RAMP_DOWN, FLAT, RAMP_UP, FLAT                           Log, yellow slab with green pot
+17    FLAT, RAMP_UP, FLAT                                            Deer statues
+18    FLAT, RAMP_UP, CLIFF_DOWN, TUNNEL, FLAT                        Overhead railing
