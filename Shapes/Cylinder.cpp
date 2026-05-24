@@ -1,4 +1,3 @@
-
 template<int n>
 Cylinder<n>::Cylinder(const glm::vec<n,float>& center, float radius, float height, int resolution, int axis){
     this->center = center;
@@ -203,7 +202,6 @@ float* Cylinder<n>::getPoints() const{
     
     int idx = 0;
 
-    // Helper to write a vertex position only (n components)
     auto writePosition = [&](const glm::vec<n,float>& posVec){
         result[idx++] = posVec[0];
         result[idx++] = posVec[1];
@@ -211,7 +209,6 @@ float* Cylinder<n>::getPoints() const{
         if (n > 3) result[idx++] = 1.0f;
     };
 
-    // Top center vertex (position only)
     glm::vec<n,float> topNormal = axisDir;
     writePosition(topCenter);
 
@@ -225,11 +222,9 @@ float* Cylinder<n>::getPoints() const{
             float vComp = this->basisV[j] * sa;
             p[j] = topCenter[j] + radius * (uComp + vComp);
         }
-        // top rim position
         writePosition(p);
     }
 
-    // Bottom center position
     glm::vec<n,float> bottomNormal;
     for (int i = 0; i < n; ++i) bottomNormal[i] = -axisDir[i];
     writePosition(bottomCenter);
@@ -244,11 +239,9 @@ float* Cylinder<n>::getPoints() const{
             float vComp = this->basisV[j] * sa;
             p[j] = bottomCenter[j] + radius * (uComp + vComp);
         }
-        // bottom rim position
         writePosition(p);
     }
 
-    // Side strip: top and bottom alternating
     for (int k = 0; k <= resolution; ++k) {
         float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
@@ -260,7 +253,6 @@ float* Cylinder<n>::getPoints() const{
             pt[j] = topCenter[j] + radius * (uComp + vComp);
             pb[j] = bottomCenter[j] + radius * (uComp + vComp);
         }
-        // side positions: top then bottom
         for (int j = 0; j < 3; ++j) nrm[j] = pt[j] - ((topCenter[j] + bottomCenter[j]) * 0.5f);
         writePosition(pt);
         writePosition(pb);
@@ -285,21 +277,16 @@ float* Cylinder<n>::getTexCoords() const {
     float* result = new float[totalVerts * 2];
     int idx = 0;
 
-    // Top center
     result[idx++] = 0.5f; result[idx++] = 1.0f;
-    // Top rim
     for (int k = 0; k <= resolution; ++k) {
         float u = (float)k / (float)resolution;
         result[idx++] = u; result[idx++] = 1.0f;
     }
-    // Bottom center
     result[idx++] = 0.5f; result[idx++] = 0.0f;
-    // Bottom rim
     for (int k = resolution; k >= 0; --k) {
         float u = (float)k / (float)resolution;
         result[idx++] = u; result[idx++] = 0.0f;
     }
-    // Side strip: top then bottom alternating
     for (int k = 0; k <= resolution; ++k) {
         float u = (float)k / (float)resolution;
         result[idx++] = u; result[idx++] = 1.0f;
@@ -338,26 +325,21 @@ float* Cylinder<n>::getNormals() const {
         bottomCenter[i] = center[i] - axisDir[i] * height / 2.0f;
     }
 
-    // Top center normal
     float nx = axisDir[0], ny = axisDir[1], nz = axisDir[2];
     float len = sqrtf(nx*nx + ny*ny + nz*nz);
     if (len>0.0f) { nx/=len; ny/=len; nz/=len; }
     result[idx++] = nx; result[idx++] = ny; result[idx++] = nz;
 
-    // Top rim normals (same as top normal)
     for (int k = 0; k <= resolution; ++k) {
         result[idx++] = nx; result[idx++] = ny; result[idx++] = nz;
     }
 
-    // Bottom center normal
     result[idx++] = -nx; result[idx++] = -ny; result[idx++] = -nz;
 
-    // Bottom rim normals
     for (int k = resolution; k >= 0; --k) {
         result[idx++] = -nx; result[idx++] = -ny; result[idx++] = -nz;
     }
 
-    // Side normals: compute per point
     for (int k = 0; k <= resolution; ++k) {
         float a = (2.0f * 3.14159265358979323846f * k) / resolution + angleOffset;
         float ca = cosf(a);
@@ -377,7 +359,6 @@ float* Cylinder<n>::getNormals() const {
         float rlen = sqrtf(rx*rx + ry*ry + rz*rz);
         if (rlen > 0.0f) { rx/=rlen; ry/=rlen; rz/=rlen; }
         result[idx++] = rx; result[idx++] = ry; result[idx++] = rz;
-        // bottom point same normal
         result[idx++] = rx; result[idx++] = ry; result[idx++] = rz;
     }
 
@@ -398,9 +379,7 @@ glm::vec<n,float> Cylinder<n>::normalAtAngle(float angle) const {
     float ca = cosf(angle);
     float sa = sinf(angle);
     for (int i = 0; i < n; ++i) out[i] = 0.0f;
-    // normal is combination of basisU and basisV scaled by cos/sin
     for (int i = 0; i < n; ++i) out[i] = this->basisU[i] * ca + this->basisV[i] * sa;
-    // normalize
     float len = 0.0f;
     for (int i = 0; i < 3; ++i) len += out[i]*out[i];
     len = sqrtf(len);
@@ -411,7 +390,6 @@ glm::vec<n,float> Cylinder<n>::normalAtAngle(float angle) const {
 
 template<int n>
 glm::vec<n,float> Cylinder<n>::normalAtPoint(const glm::vec<n,float>& p) const {
-    // compute vector from cylinder center line to point and normalize
     glm::vec<n,float> axisDir;
     for (int i = 0; i < n; ++i) axisDir[i] = 0.0f;
     if (n >= 3) {
@@ -419,19 +397,14 @@ glm::vec<n,float> Cylinder<n>::normalAtPoint(const glm::vec<n,float>& p) const {
         axisDir[1] = this->basisU[2] * this->basisV[0] - this->basisU[0] * this->basisV[2];
         axisDir[2] = this->basisU[0] * this->basisV[1] - this->basisU[1] * this->basisV[0];
     }
-    // center of axis line
     glm::vec<n,float> cLineCenter;
     for (int i = 0; i < n; ++i) cLineCenter[i] = center[i];
-    // project point onto plane perpendicular to axis passing through center
-    // compute vector from center to p
     glm::vec<n,float> v;
     for (int i = 0; i < n; ++i) v[i] = p[i] - center[i];
-    // subtract component along axisDir
     float dot = 0.0f;
     for (int i = 0; i < 3; ++i) dot += v[i] * axisDir[i];
     glm::vec<n,float> radial;
     for (int i = 0; i < 3; ++i) radial[i] = v[i] - dot * axisDir[i];
-    // normalize radial
     float rlen = 0.0f;
     for (int i = 0; i < 3; ++i) rlen += radial[i]*radial[i];
     rlen = sqrtf(rlen);
@@ -459,8 +432,10 @@ void Cylinder<n>::draw(){
             glUniform4fv(loc, 1, baseCol);
         }
     }
-    glDisableVertexAttribArray(1);
-    glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
+    
+    // FIX: Changed from attribute 1 (aTexCoords) to attribute 3 (aColor).
+    glDisableVertexAttribArray(3);
+    glVertexAttrib4f(3, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, capVerts);
     glDrawArrays(GL_TRIANGLE_FAN, capVerts, capVerts);
@@ -533,3 +508,4 @@ void Cylinder<n>::setResolution(int r){
 
 template<int n>
 int Cylinder<n>::getResolution() const { return this->resolution; }
+

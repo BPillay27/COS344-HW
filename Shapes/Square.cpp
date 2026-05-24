@@ -166,8 +166,9 @@ void Square<n>::draw() {
     if (this->VAO == 0u) this->createGLBuffers();
     int verts = getNumPoints() / n;
     glBindVertexArray(this->VAO);
-    glDisableVertexAttribArray(1);
-    glVertexAttrib4f(1, this->colour[0], this->colour[1], this->colour[2], this->colour[3]);
+    // Attribute 3 is per-vertex color in the shader. Keep it constant per-square.
+    glDisableVertexAttribArray(3);
+    glVertexAttrib3f(3, this->colour[0], this->colour[1], this->colour[2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, verts);
     glBindVertexArray(0);
 }

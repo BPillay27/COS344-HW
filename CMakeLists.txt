@@ -14,6 +14,18 @@ endif()
 
 project ("HomwWorkAssignment")
 
+file(COPY
+    "vertexShader.glsl"
+    "fragmentShader.glsl"
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+file(COPY
+    "Models/Hole_1_Dog.glb"
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Models
+)
+
+
 # Include FetchContent for downloading dependencies
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
@@ -51,16 +63,13 @@ set(COMMON_SOURCES
     "SpatialHash.cpp"
     "LayoutReader.cpp"
     "Shapes/light.cpp"
+    "Hole8.cpp"   # <-- ADD THESE
+    "Hole9.cpp"   # <-- ADD THESE
+    "Hole10.cpp"
 )
 
-# Create first executable from Test.cpp
-add_executable(HomwWorkAssignment 
-    "Test.cpp"
-    ${COMMON_SOURCES}
-)
-
-# Create second executable from HomwWorkAssignment.cpp
-add_executable(TestProgram
+# Create single executable from HomwWorkAssignment.cpp
+add_executable(HomwWorkAssignment
     "HomwWorkAssignment.cpp"
     ${COMMON_SOURCES}
 )
@@ -79,6 +88,13 @@ endif()
 
 target_link_libraries(HomwWorkAssignment PRIVATE assimp)
 
+file(GLOB ASSIMP_RUNTIME_DLLS
+    "${assimp_BINARY_DIR}/bin/*.dll"
+)
+if(ASSIMP_RUNTIME_DLLS)
+    file(COPY ${ASSIMP_RUNTIME_DLLS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 if(glfw3_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE glfw)
 endif()
@@ -87,32 +103,9 @@ if(GLEW_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE GLEW::GLEW)
 endif()
 
-# Configure second executable (TestProgram from HomwWorkAssignment.cpp)
-target_include_directories(TestProgram PRIVATE ${glm_SOURCE_DIR})
-target_include_directories(TestProgram PRIVATE ${assimp_SOURCE_DIR}/include)
-
-if(GLEW_FOUND)
-    target_include_directories(TestProgram PRIVATE ${GLEW_INCLUDE_DIRS})
-endif()
-
-if(glfw3_FOUND)
-    target_include_directories(TestProgram PRIVATE ${GLFW3_INCLUDE_DIR})
-endif()
-
-target_link_libraries(TestProgram PRIVATE assimp)
-
-if(glfw3_FOUND)
-    target_link_libraries(TestProgram PRIVATE glfw)
-endif()
-
-if(GLEW_FOUND)
-    target_link_libraries(TestProgram PRIVATE GLEW::GLEW)
-endif()
-
 # C++ standard
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET HomwWorkAssignment PROPERTY CXX_STANDARD 17)
-  set_property(TARGET TestProgram PROPERTY CXX_STANDARD 17)
+    set_property(TARGET HomwWorkAssignment PROPERTY CXX_STANDARD 17)
 endif()
 
 # Set HomwWorkAssignment as the startup project for Visual Studio
