@@ -45,6 +45,8 @@ TriangularPrism<n>::TriangularPrism(const TriangularPrism<n>& other) :
     Shape<n>(other),
     triangle1(other.triangle1), triangle2(other.triangle2),
     side1(other.side1), side2(other.side2), side3(other.side3) {
+    // VAO/VBO/EBO are inherited from Shape<n>; Shape's copy constructor
+    // intentionally does NOT duplicate GL handles (see Shape.h).
 }
 
 template<int n>

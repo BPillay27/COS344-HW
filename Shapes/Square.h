@@ -28,22 +28,15 @@ class Square: public Shape<n> {
         virtual int getNumPoints() const;
 
         virtual void print() const{
-            std::cout << "_ P1 _ " << std::endl;
-            std::cout << "TL: (" << tl[0];
-            for(int i = 1; i < n; i++) std::cout << ", " << tl[i];
-            std::cout << ")" << std::endl;
-            std::cout << "_ P2 _ " << std::endl;
-            std::cout << "TR: (" << tr[0];
-            for(int i = 1; i < n; i++) std::cout << ", " << tr[i];
-            std::cout << ")" << std::endl;
-            std::cout << "_ P3 _ " <<std::endl;
-            std::cout << "BR: (" << br[0];
-            for(int i = 1; i < n; i++) std::cout << ", " << br[i];
-            std::cout << ")" << std::endl;
-            std::cout << "_ P4 _ " << std::endl;
-            std::cout << "BL: (" << bl[0];
-            for(int i = 1; i < n; i++) std::cout << ", " << bl[i];
-            std::cout << ")" << std::endl;
+            auto printVec = [](const char* label, const glm::vec<n,float>& v){
+                std::cout << label;
+                for (int i = 0; i < n; ++i) std::cout << v[i] << " ";
+                std::cout << std::endl;
+            };
+            printVec("_ P1 _ ", tl);
+            printVec("_ P2 _ ", tr);
+            printVec("_ P3 _ ", br);
+            printVec("_ P4 _ ", bl);
         }
         virtual std::string fprint() const;
         void zoom(int percent);

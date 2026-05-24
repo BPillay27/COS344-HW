@@ -6,14 +6,16 @@ Cube<n>::Cube(const glm::vec<n,float>& center, float height, float width, float 
 	float hy = height/2.0f;
 	float hz = depth/2.0f;
 
-	glm::vec<n,float> p000 = {center[0]-hx, center[1]-hy, center[2]-hz};
-	glm::vec<n,float> p001 = {center[0]-hx, center[1]-hy, center[2]+hz};
-	glm::vec<n,float> p010 = {center[0]-hx, center[1]+hy, center[2]-hz};
-	glm::vec<n,float> p011 = {center[0]-hx, center[1]+hy, center[2]+hz};
-	glm::vec<n,float> p100 = {center[0]+hx, center[1]-hy, center[2]-hz};
-	glm::vec<n,float> p101 = {center[0]+hx, center[1]-hy, center[2]+hz};
-	glm::vec<n,float> p110 = {center[0]+hx, center[1]+hy, center[2]-hz};
-	glm::vec<n,float> p111 = {center[0]+hx, center[1]+hy, center[2]+hz};
+	// Use copy-then-offset so the pattern works for any n (vec3 or vec4).
+	// For vec4 the w component is preserved from center (should be 1.0).
+	glm::vec<n,float> p000 = center; p000[0] -= hx; p000[1] -= hy; p000[2] -= hz;
+	glm::vec<n,float> p001 = center; p001[0] -= hx; p001[1] -= hy; p001[2] += hz;
+	glm::vec<n,float> p010 = center; p010[0] -= hx; p010[1] += hy; p010[2] -= hz;
+	glm::vec<n,float> p011 = center; p011[0] -= hx; p011[1] += hy; p011[2] += hz;
+	glm::vec<n,float> p100 = center; p100[0] += hx; p100[1] -= hy; p100[2] -= hz;
+	glm::vec<n,float> p101 = center; p101[0] += hx; p101[1] -= hy; p101[2] += hz;
+	glm::vec<n,float> p110 = center; p110[0] += hx; p110[1] += hy; p110[2] -= hz;
+	glm::vec<n,float> p111 = center; p111[0] += hx; p111[1] += hy; p111[2] += hz;
 
 	// Front face (z = +)
 	f1 = Square<n>(p011, p111, p101, p001);
@@ -196,10 +198,9 @@ GLenum Cube<n>::glDrawMode() const {
 
 template<int n>
 void Cube<n>::print() const{
-	std::cout << "_ Cube Center _" << std::endl;
-	std::cout << "Center: (" << center[0];
-	for(int i = 1; i < n; i++) std::cout << ", " << center[i];
-	std::cout << ")" << std::endl;
+	std::cout << "_ Cube Center _ ";
+	for (int i = 0; i < n; ++i) std::cout << center[i] << " ";
+	std::cout << std::endl;
 	std::cout << "_ Front Face _" << std::endl; f1.print();
 	std::cout << "_ Back Face _" << std::endl; f2.print();
 	std::cout << "_ Left Face _" << std::endl; f3.print();
