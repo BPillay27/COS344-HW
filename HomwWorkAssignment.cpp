@@ -330,7 +330,7 @@ int main()
     scene.addShape(rectangularPrism2_6);
 
     // Green sphere
-    glm::vec4 sphereCenter_6(1.5f, -0.7f, 0.2f, 1.0f);  //xyz
+    glm::vec4 sphereCenter_6(1.5f, -0.7f, 0.2f, 1.0f); // xyz
 
     float sphereRadius_6 = 0.35f;
     int sphereStacks_6 = 24;
@@ -345,7 +345,68 @@ int main()
     greenSphere_6->setColour(9, 139, 74); // Green
     scene.addShape(greenSphere_6);
 
-    
+    // Hole 6 barriers around the ends of the green rectangles
+    // Barrier colour: (235, 183, 93)
+
+    float barrierHalfWidth_6 = 0.12f; // Barrier thickness along X
+    float barrierHalfHeight_6 = halfHeight_6 * 1.4f;
+    float barrierDepth_6 = depth_6;
+    float barrierY_6 = centreY_6;
+
+    // ---------------------------------------------------------
+    // Barrier for LEFT end of first green prism
+    // ---------------------------------------------------------
+
+    float leftBarrierX_6 = -halfWidth_6 - barrierHalfWidth_6;
+
+    glm::vec4 leftBarrierFrontTL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontTR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontBR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontBL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6, 1.0f);
+
+    Square<4> leftBarrierFront_6(
+        leftBarrierFrontTL_6,
+        leftBarrierFrontTR_6,
+        leftBarrierFrontBR_6,
+        leftBarrierFrontBL_6);
+
+    glm::vec4 leftBarrierBackTL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackTR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackBR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackBL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+
+    Square<4> leftBarrierBack_6(
+        leftBarrierBackTL_6,
+        leftBarrierBackTR_6,
+        leftBarrierBackBR_6,
+        leftBarrierBackBL_6);
+
+    Cube<4> *leftBarrier_6 = new Cube<4>(leftBarrierFront_6, leftBarrierBack_6);
+    leftBarrier_6->setColour(235, 183, 93);
+    scene.addShape(leftBarrier_6);
+
+    // Black cylinder
+    glm::vec4 cylinderCenter_6(-0.9f, -0.73f, 1.0f, 1.0f);
+
+    float cylinderRadius_6 = 0.25f;
+    float cylinderHeight_6 = 0.4f;
+    int cylinderResolution_6 = 32;
+
+    // axis:
+    // 0 = along X
+    // 1 = along Y
+    // 2 = along Z
+    int cylinderAxis_6 = 1;
+
+    Cylinder<4> *blackCylinder_6 = new Cylinder<4>(
+        cylinderCenter_6,
+        cylinderRadius_6,
+        cylinderHeight_6,
+        cylinderResolution_6,
+        cylinderAxis_6);
+
+    blackCylinder_6->setColour(0, 0, 0); // Black
+    scene.addShape(blackCylinder_6);
     /*************************************************** */
 
     scene.createGLBuffers();
