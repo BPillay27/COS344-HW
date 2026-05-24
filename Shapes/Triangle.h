@@ -23,6 +23,8 @@ class Triangle: public Shape<n> {
         virtual Triangle<n>* operator*(const glm::mat<n,n,float>&) const;
         virtual float* getPoints() const;
         virtual int getNumPoints() const;
+        virtual float* getNormals() const override;
+        virtual int getNumNormals() const override;
 
         virtual void print() const{
             std::cout << "_ P1 _ " << std::endl;

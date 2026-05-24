@@ -1,4 +1,4 @@
-﻿﻿# CMakeList.txt : CMake project for HomwWorkAssignment, include source and define
+# CMakeList.txt : CMake project for HomwWorkAssignment, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.10)
@@ -41,6 +41,8 @@ FetchContent_MakeAvailable(assimp)
 
 # Common source files shared by both executables
 set(COMMON_SOURCES
+    "Camera.cpp"
+    "Drone.cpp"
     "Figure.cpp"
     "Object.cpp"
     "RenderState.cpp"
