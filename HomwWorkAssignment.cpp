@@ -34,9 +34,38 @@ using namespace std;
 #include "RenderState.h"
 #include "SpatialHash.h"
 
+#include "Drone.h"
+#include "Hole8.h"
+#include "Camera.h"
+
 // Global variables
 SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
+
+Drone* gDrone = nullptr;
+
+// Mouse state for drone look
+double gLastMouseX = 0.0, gLastMouseY = 0.0;
+bool gFirstMouse = true;
+const float MOUSE_SENSITIVITY = 0.05f;
+
+void cursor_callback(GLFWwindow* /*window*/, double xpos, double ypos) {
+    if (gFirstMouse) {
+        gLastMouseX = xpos;
+        gLastMouseY = ypos;
+        gFirstMouse = false;
+        return;
+    }
+    float dx =  (float)(xpos - gLastMouseX) * MOUSE_SENSITIVITY;
+    float dy =  (float)(gLastMouseY - ypos) * MOUSE_SENSITIVITY; // inverted: up = positive pitch
+    gLastMouseX = xpos;
+    gLastMouseY = ypos;
+    if (gDrone) {
+        gDrone->addYaw(dx);
+        gDrone->addPitch(dy);
+    }
+}
+
 
 #if defined(__has_include)
 #  if __has_include("stb_image.h")
@@ -396,67 +425,85 @@ int main() {
     do {
         glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
 
-        // ===== SMOOTH FIRST-PERSON WASD FLIGHT CONTROLS =====
-        glm::vec3 forwardDir = glm::normalize(cameraTarget - cameraPos);
-        glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, upVector));
-        
-        if (keyState.W) { cameraPos += cameraSpeed * forwardDir; cameraTarget += cameraSpeed * forwardDir; }
-        if (keyState.S) { cameraPos -= cameraSpeed * forwardDir; cameraTarget -= cameraSpeed * forwardDir; }
-        if (keyState.A) { cameraPos -= cameraSpeed * rightDir;   cameraTarget -= cameraSpeed * rightDir; }
-        if (keyState.D) { cameraPos += cameraSpeed * rightDir;   cameraTarget += cameraSpeed * rightDir; }
-        
-        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, upVector);
-        
-        // Feed the active camera position to vertex shader for specular calculations
-        glUniform3f(glGetUniformLocation(programID, "uCameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-        
+        // Delta time for drone animation
+        float currentTime = (float)glfwGetTime();
+        float dt = currentTime - lastTime;
+        lastTime = currentTime;
+        if (dt > 0.1f) dt = 0.1f; // clamp to avoid jumps after stalls
+
+        if (gDrone) gDrone->update(dt);
+
+        // ===== DRONE FLIGHT CONTROLS =====
+        // W/S  : forward / back        A/D    : strafe left / right
+        // Space: ascend                Shift  : descend
+        // Q/E  : roll left / right     Mouse  : yaw and pitch (cursor callback)
+        const float MOVE_SPEED = 5.0f;
+        const float ROLL_SPEED = 90.0f;
+        const float LOOK_SPEED = 60.0f; // degrees per second for arrow-key look
+        if (gDrone) {
+            if (glfwGetKey(window, GLFW_KEY_W)          == GLFW_PRESS) gDrone->moveForward( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_S)          == GLFW_PRESS) gDrone->moveForward(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_A)          == GLFW_PRESS) gDrone->moveRight(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_D)          == GLFW_PRESS) gDrone->moveRight( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_SPACE)      == GLFW_PRESS) gDrone->moveUp( MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) gDrone->moveUp(-MOVE_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_Q)          == GLFW_PRESS) gDrone->addRoll(-ROLL_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_E)          == GLFW_PRESS) gDrone->addRoll( ROLL_SPEED * dt);
+            // Arrow keys: look around
+            if (glfwGetKey(window, GLFW_KEY_LEFT)       == GLFW_PRESS) gDrone->addYaw(  LOOK_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_RIGHT)      == GLFW_PRESS) gDrone->addYaw(  -LOOK_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_UP)         == GLFW_PRESS) gDrone->addPitch( LOOK_SPEED * dt);
+            if (glfwGetKey(window, GLFW_KEY_DOWN)       == GLFW_PRESS) gDrone->addPitch(-LOOK_SPEED * dt);
+        }
+
+        // Main view comes from the drone's onboard camera.
+        glm::mat4 VP     = gDrone ? gDrone->getCamera().getViewProjection() : glm::mat4(1.0f);
+        glm::mat4 V      = gDrone ? gDrone->getCamera().getViewMatrix()     : glm::mat4(1.0f);
+        glm::vec3 camPos = gDrone ? gDrone->getCamera().getPosition()       : glm::vec3(0.0f);
+
+        // Camera position for specular lighting in the vertex shader.
+        glUniform3f(glGetUniformLocation(programID, "uCameraPos"), camPos.x, camPos.y, camPos.z);
+
         // ==================== 1. Render Main View ====================
-        glViewport(0, 0, 1000, 1000); 
-        glClearColor(0.0f, 0.0f, 0.4f, 1.0f); // Main View: Deep Blue
+        glViewport(0, 0, 1000, 1000);
+        glClearColor(0.0f, 0.0f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         GLint grayscaleLoc = glGetUniformLocation(programID, "useGrayscale");
         if (grayscaleLoc != -1) glUniform1i(grayscaleLoc, gUseGrayscale ? 1 : 0);
 
-        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(view * model)));
-        glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-        glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
-        // The vertex shader expects a combined Model-View-Projection matrix in `uMVP`.
-        GLint mvpLoc = glGetUniformLocation(programID, "uMVP");
-        if (mvpLoc >= 0) {
-            glm::mat4 mvp = projection * view * model;
-            glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-        }
-        
-        renderObjects(programID, view);
-        
-        // ==================== 2. Render Mini-Map ====================
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(V * model)));
+        glUniformMatrix3fv(locNM,         1, GL_FALSE, glm::value_ptr(normalMatrix));
+        glUniformMatrix4fv(locModel,      1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(locView,       1, GL_FALSE, glm::value_ptr(V));
+
+        // uMVP drives gl_Position in the vertex shader.
+        glm::mat4 mvp = VP * model;
+        if (locMVP >= 0) glUniformMatrix4fv(locMVP, 1, GL_FALSE, glm::value_ptr(mvp));
+
+        renderObjects(programID, V);
+        if (gDrone) gDrone->draw(programID, VP);
+
+        // ==================== 2. Mini-Map (top-down, tracks drone) ====================
         glEnable(GL_SCISSOR_TEST);
-        glScissor(750, 0, 250, 250);  
-        glViewport(750, 0, 250, 250); 
-        
-        // Clear the mini-map viewport to a unique background color (Dark Slate)
+        glScissor(750, 0, 250, 250);
+        glViewport(750, 0, 250, 250);
+
         glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-        
-        glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(orthogonalProjection));
-        
-        // Track player view position dynamically from overhead (Top-down view)
-        glm::vec3 miniMapPos = glm::vec3(cameraPos.x, 15.0f, cameraPos.z);
-        glm::vec3 miniMapTarget = glm::vec3(cameraPos.x, 0.0f, cameraPos.z); 
-        glm::mat4 miniMapView = glm::lookAt(miniMapPos, miniMapTarget, glm::vec3(0.0f, 0.0f, -1.0f));
-        
-        glm::mat3 miniMapNormal = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
-        glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(miniMapNormal));
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glm::vec3 dronePos   = gDrone ? gDrone->getPosition() : glm::vec3(0.0f);
+        glm::vec3 mmEye      = glm::vec3(dronePos.x, 15.0f, dronePos.z);
+        glm::vec3 mmTarget   = glm::vec3(dronePos.x,  0.0f, dronePos.z);
+        glm::mat4 miniMapView = glm::lookAt(mmEye, mmTarget, glm::vec3(0.0f, 0.0f, -1.0f));
+
+        glm::mat3 miniNM = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
+        glUniformMatrix3fv(locNM,   1, GL_FALSE, glm::value_ptr(miniNM));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(miniMapView));
-        // Set uMVP for mini-map rendering as well
-        GLint mvpLocMini = glGetUniformLocation(programID, "uMVP");
-        if (mvpLocMini >= 0) {
-            glm::mat4 miniMVP = orthogonalProjection * miniMapView * model;
-            glUniformMatrix4fv(mvpLocMini, 1, GL_FALSE, glm::value_ptr(miniMVP));
-        }
+
+        glm::mat4 miniMVP = orthogonalProjection * miniMapView * model;
+        if (locMVP >= 0) glUniformMatrix4fv(locMVP, 1, GL_FALSE, glm::value_ptr(miniMVP));
+
 
         renderObjects(programID, miniMapView);
         
