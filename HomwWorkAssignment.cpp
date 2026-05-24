@@ -34,6 +34,8 @@ using namespace std;
 #include "SpatialHash.h"
 #include "Drone.h"
 #include "Hole8.h"
+#include "Hole9.h"
+#include "Hole10.h"
 #include "Camera.h"
 
 // Global variables
@@ -196,11 +198,15 @@ int main() {
     gDrone = new Drone();
     gDrone->createGLBuffers();
 
-    // Build Hole 8 geometry and register it in the global scene.
+    // Build Hole geometry and register it in the global scene.
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
+    buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
+    buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
 
     scene.createGLBuffers();
     std::cout << "Hole 8 geometry loaded. Program initialised successfully." << std::endl;
+    std::cout << "Hole 9 geometry loaded. Program initialised successfully." << std::endl;
+    std::cout << "Hole 10 geometry loaded. Program initialised successfully." << std::endl;
 
     float lastTime = (float)glfwGetTime();
 

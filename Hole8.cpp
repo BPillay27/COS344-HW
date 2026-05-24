@@ -28,8 +28,6 @@
 static const int TURF_R = 34,  TURF_G = 139, TURF_B = 34;   // dark green turf
 static const int WALL_R = 101, WALL_G = 67,  WALL_B = 33;   // wooden border walls
 static const int CUP_R  = 20,  CUP_G  = 20,  CUP_B  = 20;  // near-black cup
-static const int POLE_R = 200, POLE_G = 200, POLE_B = 200;  // light grey flag pole
-static const int FLAG_R = 220, FLAG_G = 30,  FLAG_B = 30;   // red flag
 
 // Helper: build a vec4 with world offset applied.
 static glm::vec4 pt(float x, float y, float z, glm::vec3 off) {
@@ -155,32 +153,8 @@ void buildHole8(Figure& scene, glm::vec3 off) {
     // ============================================================
     {
         glm::vec4 cupCentre = pt(0.0f, 0.25f, -15.5f, off);
-        Cylinder<4>* cup = new Cylinder<4>(cupCentre, 0.18f, 0.35f, 24, 1);
+        Cylinder<4>* cup = new Cylinder<4>(cupCentre, 0.18f, 0.15f, 24, 1);
         cup->setColour(CUP_R, CUP_G, CUP_B);
         scene.addShape(cup);
-    }
-
-    // ============================================================
-    // FLAG POLE
-    // ============================================================
-    {
-        glm::vec4 poleBase = pt(0.0f, 0.40f, -15.5f, off);
-        glm::vec4 poleTip  = pt(0.0f, 1.70f, -15.5f, off);
-        Cylinder<4>* pole = new Cylinder<4>(poleBase, poleTip, 0.025f, 8);
-        pole->setColour(POLE_R, POLE_G, POLE_B);
-        scene.addShape(pole);
-    }
-
-    // ============================================================
-    // FLAG
-    // ============================================================
-    {
-        glm::vec4 fl_tl = pt(0.025f, 1.70f, -15.5f, off);
-        glm::vec4 fl_tr = pt(0.55f,  1.70f, -15.5f, off);
-        glm::vec4 fl_br = pt(0.55f,  1.45f, -15.5f, off);
-        glm::vec4 fl_bl = pt(0.025f, 1.45f, -15.5f, off);
-        Square<4>* flag = new Square<4>(fl_tl, fl_tr, fl_br, fl_bl);
-        flag->setColour(FLAG_R, FLAG_G, FLAG_B);
-        scene.addShape(flag);
     }
 }
