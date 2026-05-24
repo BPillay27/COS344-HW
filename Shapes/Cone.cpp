@@ -212,9 +212,13 @@ GLenum Cone<n>::glDrawMode() const {
 template<int n>
 void Cone<n>::print() const{
     std::cout << "_ Apex _" << std::endl;
-    apex.print();
+    std::cout << "Apex: (" << apex[0];
+    for(int i = 1; i < n; i++) std::cout << ", " << apex[i];
+    std::cout << ")" << std::endl;
     std::cout << "_ Base Centre _" << std::endl;
-    baseCenter.print();
+    std::cout << "BaseCenter: (" << baseCenter[0];
+    for(int i = 1; i < n; i++) std::cout << ", " << baseCenter[i];
+    std::cout << ")" << std::endl;
 }
 
 template<int n>

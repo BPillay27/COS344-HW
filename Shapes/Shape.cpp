@@ -17,8 +17,52 @@ float* Shape<n>::getColour() const{
 }
 
 template <int n>
+void Shape<n>::updateVertexColourAttribute() {
+    if (VAO == 0u) return;
+    glBindVertexArray(VAO);
+    glVertexAttrib3f(3, colour[0], colour[1], colour[2]);
+    glBindVertexArray(0);
+}
+
+template <int n>
+void Shape<n>::setShininess(float s) {
+    shininess = s;
+}
+
+template <int n>
+float Shape<n>::getShininess() const {
+    return shininess;
+}
+
+template <int n>
+void Shape<n>::setTextureMap(const std::string& colorFile, const std::string& alphaFile, const std::string& displacementFile) {
+    colorMapFile = colorFile;
+    alphaMapFile = alphaFile;
+    displacementMapFile = displacementFile;
+}
+
+template <int n>
+std::string Shape<n>::getColorMapFile() const {
+    return colorMapFile;
+}
+
+template <int n>
+std::string Shape<n>::getAlphaMapFile() const {
+    return alphaMapFile;
+}
+
+template <int n>
+std::string Shape<n>::getDisplacementMapFile() const {
+    return displacementMapFile;
+}
+
+template <int n>
 Shape<n>::Shape(const Shape& other) {
     for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
+    this->shininess = other.shininess;
+    this->colorMapFile = other.colorMapFile;
+    this->alphaMapFile = other.alphaMapFile;
+    this->displacementMapFile = other.displacementMapFile;
 
     VAO = 0u; VBO = 0u; EBO = 0u;
     vertexCount = other.vertexCount;
@@ -30,6 +74,10 @@ Shape<n>& Shape<n>::operator=(const Shape& other) {
 
         deleteGLBuffers();
         for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
+        this->shininess = other.shininess;
+        this->colorMapFile = other.colorMapFile;
+        this->alphaMapFile = other.alphaMapFile;
+        this->displacementMapFile = other.displacementMapFile;
         VAO = 0u; VBO = 0u; EBO = 0u;
         vertexCount = other.vertexCount;
     }
@@ -39,6 +87,10 @@ Shape<n>& Shape<n>::operator=(const Shape& other) {
 template <int n>
 Shape<n>::Shape(Shape&& other) noexcept {
     for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
+    this->shininess = other.shininess;
+    this->colorMapFile = other.colorMapFile;
+    this->alphaMapFile = other.alphaMapFile;
+    this->displacementMapFile = other.displacementMapFile;
     // steal GL handles
     VAO = other.VAO; VBO = other.VBO; EBO = other.EBO;
     vertexCount = other.vertexCount;
@@ -51,6 +103,10 @@ Shape<n>& Shape<n>::operator=(Shape&& other) noexcept {
     if (this != &other) {
         deleteGLBuffers();
         for (int i = 0; i < 4; ++i) this->colour[i] = other.colour[i];
+        this->shininess = other.shininess;
+        this->colorMapFile = other.colorMapFile;
+        this->alphaMapFile = other.alphaMapFile;
+        this->displacementMapFile = other.displacementMapFile;
         VAO = other.VAO; VBO = other.VBO; EBO = other.EBO;
         vertexCount = other.vertexCount;
         other.VAO = other.VBO = other.EBO = 0u;
