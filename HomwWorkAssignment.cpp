@@ -27,7 +27,7 @@ using namespace std;
 #include "shapes/SquarePyramid.h"
 #include "shapes/Sphere.h"
 #include "shapes/light.h"
-
+#include "shapes/Imported.h"
 
 #include "Figure.h"
 #include "Shape3D.h"
@@ -39,18 +39,12 @@ using namespace std;
 #include "Hole10.h"
 #include "Camera.h"
 
-#include "Drone.h"
-#include "Hole8.h"
-#include "Camera.h"
 
 // Global variables
 SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
 Drone* gDrone = nullptr;
 
-
-
-Drone* gDrone = nullptr;
 
 // Mouse state for drone look
 double gLastMouseX = 0.0, gLastMouseY = 0.0;
@@ -137,7 +131,13 @@ const char *getError() {
 
 inline void startUpGLFW() {
     glewExperimental = true; 
-    if (!glfwInit()) throw getError();
+    std::cerr << "Calling glfwInit()" << std::endl;
+    if (!glfwInit()) {
+        const char *error = getError();
+        std::cerr << "glfwInit() failed: " << (error ? error : "<no error>") << std::endl;
+        throw error;
+    }
+    std::cerr << "glfwInit() succeeded" << std::endl;
 }
 
 inline void startUpGLEW() {
@@ -155,11 +155,14 @@ inline GLFWwindow *setUp() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+    std::cerr << "Creating GLFW window" << std::endl;
     GLFWwindow *window = glfwCreateWindow(1000, 1000, "Experiment", NULL, NULL);
     if (window == NULL) {
         glfwTerminate();
+        std::cerr << "glfwCreateWindow() failed" << std::endl;
         throw "Failed to open GLFW window.\n";
     }
+    std::cerr << "GLFW window created" << std::endl;
     glfwMakeContextCurrent(window); 
     startUpGLEW();
     return window;
@@ -182,7 +185,10 @@ int main() {
     try { window = setUp(); }
     catch (const char *e) { cout << e << endl; throw; }
 
+    std::cout << "GLFW window created successfully" << std::endl;
+
     GLuint programID = LoadShaders("vertexShader.glsl", "fragmentShader.glsl");
+    std::cout << "LoadShaders returned programID=" << programID << std::endl;
     if (programID == 0) { std::cerr << "Failed to load shaders" << std::endl; glfwTerminate(); return 1; }
    
     glfwSetKeyCallback(window, keyCallback);
@@ -204,6 +210,7 @@ int main() {
     glm::mat4 model = glm::mat4(1.0f);
     
     glUseProgram(programID);
+    std::cout << "Using shader program " << programID << std::endl;
     
     // ===== INITIALIZE LIGHTING UNIFORMS TO PREVENT SHADER REJECTION (CRITICAL) =====
     glUniform3f(glGetUniformLocation(programID, "uLightDir"), 0.5f, 1.0f, 0.4f);
@@ -223,6 +230,8 @@ int main() {
     
     float cameraSpeed = 0.0023f;
     gSpatialHash = new SpatialHash(2.5f);
+
+    std::cout << "Initialization complete, entering main loop" << std::endl;
     
     // Drone init
     gDrone = new Drone();
@@ -232,6 +241,12 @@ int main() {
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
+
+    /*
+    ====================================
+    Course One 
+    ===================================
+    */
     Figure* turf_1 = new Figure();
     Figure* walls_1 = new Figure();
     // Add red prism shape
@@ -427,10 +442,18 @@ int main() {
     Figure* dogFigure = new Figure();
     dogFigure->addShape3D(dogShape);
 
-    scene.addObject(dogFigure);
-    scene.addObject(holeFigure_1); // Add the hole figure to the scene so it renders as a black hole in the turf
-    scene.addObject(turf_1);
-    scene.addObject(walls_1);
+
+    holeFigure_1->addObject(turf_1);
+    holeFigure_1->addObject(dogFigure);
+    holeFigure_1->addObject(walls_1);
+
+    holeFigure_1->move(-0.5f, 1.0f, 0.0f); // Adjust position to align with the turf and walls
+
+    holeFigure_1->zoom(-10); // Scale the entire hole down by 10%
+    // TO MOVE HOLE ONE 
+
+    scene.addObject(holeFigure_1);
+
 
     
     int prismID = scene.getNumShapes() - 1;
