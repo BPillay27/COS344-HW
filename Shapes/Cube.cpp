@@ -71,6 +71,11 @@ Cube<n>::Cube(const Square<n>& f1, const Square<n>& f2){
 	// inherit colour from first face
 	{
 		float* col = f1.getColour();
+		this->f2.setColour((int)roundf(col[0] * 255.0f), (int)roundf(col[1] * 255.0f), (int)roundf(col[2] * 255.0f), col[3]);
+		this->f3.setColour((int)roundf(col[0] * 255.0f), (int)roundf(col[1] * 255.0f), (int)roundf(col[2] * 255.0f), col[3]);
+		this->f4.setColour((int)roundf(col[0] * 255.0f), (int)roundf(col[1] * 255.0f), (int)roundf(col[2] * 255.0f), col[3]);
+		this->f5.setColour((int)roundf(col[0] * 255.0f), (int)roundf(col[1] * 255.0f), (int)roundf(col[2] * 255.0f), col[3]);
+		this->f6.setColour((int)roundf(col[0] * 255.0f), (int)roundf(col[1] * 255.0f), (int)roundf(col[2] * 255.0f), col[3]);
 		for (int i = 0; i < 4; ++i) this->colour[i] = col[i];
 		delete[] col;
 	}
