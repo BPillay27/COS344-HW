@@ -40,8 +40,6 @@ FetchContent_Declare(assimp
 FetchContent_MakeAvailable(assimp)
 
 # Common source files shared by both executables
-# NOTE: Template implementation files (Shape.cpp and all Shape subclass .cpp files)
-# are included in their corresponding .h headers and should NOT be listed here to avoid duplicate definitions
 set(COMMON_SOURCES
     "Figure.cpp"
     "Object.cpp"
@@ -56,7 +54,7 @@ set(COMMON_SOURCES
 )
 
 # Create first executable from Test.cpp
-add_executable(HomwWorkAssignment
+add_executable(HomwWorkAssignment 
     "Test.cpp"
     ${COMMON_SOURCES}
 )
