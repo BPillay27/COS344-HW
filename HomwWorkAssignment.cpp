@@ -186,15 +186,16 @@ int main() {
     gSpatialHash = new SpatialHash(2.5f);
     
     // Add red prism shape
-    glm::vec4 frontCenter(0.0f, 0.0f, 0.0f, 1.0f);
-    Square<4> frontFace(frontCenter, 2.0f, 5.0f);
-    frontFace.setColour(255, 50, 50, 1.0f); // Enabled safe 0-255 scale coloring
+    glm::vec4 frontCenter(0.0f, -0.50f, 1.0f, 1.0f);
+    Square<4> frontFace(frontCenter, 3.0f, 2.0f);
 
-    glm::vec4 backCenter(0.0f, 0.0f, -3.0f, 1.0f);
-    Square<4> backFace(backCenter, 2.0f, 5.0f);
-    backFace.setColour(255, 50, 50, 1.0f);
+
+    glm::vec4 backCenter(0.0f, -1.50f, 1.0f, 1.0f);
+    Square<4> backFace(backCenter, 3.0f, 2.0f);
+
     
     Cube<4>* rectangularPrism = new Cube<4>(frontFace, backFace);
+    rectangularPrism->setColour(9, 139, 74);
     scene.addShape(rectangularPrism);
     
     int prismID = scene.getNumShapes() - 1;
@@ -233,6 +234,12 @@ int main() {
         glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
+        // The vertex shader expects a combined Model-View-Projection matrix in `uMVP`.
+        GLint mvpLoc = glGetUniformLocation(programID, "uMVP");
+        if (mvpLoc >= 0) {
+            glm::mat4 mvp = projection * view * model;
+            glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+        }
         
         renderObjects(programID, view);
         
@@ -255,6 +262,12 @@ int main() {
         glm::mat3 miniMapNormal = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
         glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(miniMapNormal));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(miniMapView));
+        // Set uMVP for mini-map rendering as well
+        GLint mvpLocMini = glGetUniformLocation(programID, "uMVP");
+        if (mvpLocMini >= 0) {
+            glm::mat4 miniMVP = orthogonalProjection * miniMapView * model;
+            glUniformMatrix4fv(mvpLocMini, 1, GL_FALSE, glm::value_ptr(miniMVP));
+        }
 
         renderObjects(programID, miniMapView);
         

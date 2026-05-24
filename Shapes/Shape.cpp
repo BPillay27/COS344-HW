@@ -155,8 +155,7 @@ void Shape<n>::createGLBuffers(GLenum usage){
         if (texVBO == 0u) glGenBuffers(1, &texVBO);
         glBindBuffer(GL_ARRAY_BUFFER, texVBO);
         glBufferData(GL_ARRAY_BUFFER, numTex * sizeof(float), tex, usage);
-        // attribute location 1: vec2 texcoord
-        glEnableVertexAttribArray(1);
+
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         delete[] tex;
     }
