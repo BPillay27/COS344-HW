@@ -185,6 +185,8 @@ int main() {
     float cameraSpeed = 0.0023f;
     gSpatialHash = new SpatialHash(2.5f);
     
+    Figure* turf_1 = new Figure();
+    Figure* walls_1 = new Figure();
     // Add red prism shape
     float halfWidth_1 = 1.0f;   // Change this to make it wider or narrower
     float halfHeight_1 = -0.25f; // Change this to make it taller or shorter
@@ -207,16 +209,18 @@ int main() {
 
     Cube<4>* Turf = new Cube<4>(start, start2);
     Turf->setColour(9, 139, 74); // Green
-    
+    turf_1->addShape(Turf);
 
     // Three enclosing walls around the turf, leaving the -Z side open.
     const float wallThickness = 0.05f;
-    const float wallGap = 0.01f;
-    const float wallTopY_1 = halfHeight_1 + 0.25f;
+    const float wallGap = 0.0f;
+    const float wallTopY_1 = halfHeight_1 + 0.10f;
     const float wallBottomY_1 = halfHeight_1 - 0.24f;
     const float wallColorR_1 = 235;
     const float wallColorG_1 = 183;
     const float wallColorB_1 = 93;
+    const float extraWallHeight_1 = 0.15f;
+    const float raisedWallTopY_1 = wallTopY_1 + extraWallHeight_1;
     
     // Left wall (outside the turf, x < 0 side)
     glm::vec4 leftWallFrontTL(-wallGap, wallTopY_1, centreZ_1, 1.0f);
@@ -233,7 +237,7 @@ int main() {
 
     Cube<4>* leftWall = new Cube<4>(leftWallFront, leftWallBack);
     leftWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
-    scene.addShape(leftWall);
+    walls_1->addShape(leftWall);
 
     // Right wall (outside the turf, x > 1 side)
     glm::vec4 rightWallFrontTL(1.0f + wallGap, wallTopY_1, centreZ_1, 1.0f);
@@ -250,25 +254,124 @@ int main() {
 
     Cube<4>* rightWall = new Cube<4>(rightWallFront, rightWallBack);
     rightWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
-    scene.addShape(rightWall);
+    walls_1->addShape(rightWall);
 
-    // Third wall moved to the -Z side
-    glm::vec4 farWallFrontTL(-wallGap, wallTopY_1, centreZ_1 - wallGap, 1.0f);
-    glm::vec4 farWallFrontTR(1.0f + wallGap, wallTopY_1, centreZ_1 - wallGap, 1.0f);
-    glm::vec4 farWallFrontBR(1.0f + wallGap, wallBottomY_1, centreZ_1 - wallGap, 1.0f);
-    glm::vec4 farWallFrontBL(-wallGap, wallBottomY_1, centreZ_1 - wallGap, 1.0f);
+    // Third wall on the -Z side, flush with side walls to avoid corner gaps
+    glm::vec4 farWallFrontTL(-(wallGap + wallThickness), wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 farWallFrontTR(1.0f + wallGap + wallThickness, wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 farWallFrontBR(1.0f + wallGap + wallThickness, wallBottomY_1, centreZ_1, 1.0f);
+    glm::vec4 farWallFrontBL(-(wallGap + wallThickness), wallBottomY_1, centreZ_1, 1.0f);
     Square<4> farWallFront(farWallFrontTL, farWallFrontTR, farWallFrontBR, farWallFrontBL);
 
-    glm::vec4 farWallBackTL(-wallGap, wallTopY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
-    glm::vec4 farWallBackTR(1.0f + wallGap, wallTopY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
-    glm::vec4 farWallBackBR(1.0f + wallGap, wallBottomY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
-    glm::vec4 farWallBackBL(-wallGap, wallBottomY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
+    glm::vec4 farWallBackTL(-(wallGap + wallThickness), wallTopY_1, centreZ_1 - wallThickness, 1.0f);
+    glm::vec4 farWallBackTR(1.0f + wallGap + wallThickness, wallTopY_1, centreZ_1 - wallThickness, 1.0f);
+    glm::vec4 farWallBackBR(1.0f + wallGap + wallThickness, wallBottomY_1, centreZ_1 - wallThickness, 1.0f);
+    glm::vec4 farWallBackBL(-(wallGap + wallThickness), wallBottomY_1, centreZ_1 - wallThickness, 1.0f);
     Square<4> farWallBack(farWallBackTL, farWallBackTR, farWallBackBR, farWallBackBL);
 
     Cube<4>* farWall = new Cube<4>(farWallFront, farWallBack);
     farWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
-    scene.addShape(farWall);
-    scene.addShape(Turf);
+    walls_1->addShape(farWall);
+    // Horizontal cylinder from one side wall to the other.
+    // Centered on the turf top so half of it is embedded in the turf.
+    const float turfTopY_1 = halfHeight_1;
+    const float turfMidZ_1 = centreZ_1 + (difference_1 * 0.5f);
+    const float cylinderBackOffsetZ_1 = 0.0f; // keep cylinder centred over turf (no extra back offset)
+    const float cylinderRadius_1 = 0.12f;      // larger radius
+    const float cylinderLength_1 = 1.0f; // from x=0 wall to x=1 wall
+    glm::vec4 cylinderCenter_1(0.5f, turfTopY_1, turfMidZ_1 + cylinderBackOffsetZ_1, 1.0f);
+    Cylinder<4>* turfCylinder_1 = new Cylinder<4>(cylinderCenter_1, cylinderRadius_1, cylinderLength_1, 24, 0);
+    turfCylinder_1->setColour(9, 139, 74);
+    turf_1->addShape(turfCylinder_1);
+
+    
+
+    // Extra thin raised wall where the bump starts: make it a simple vertical plane (no lateral extrusion)
+    const float bumpStartZ_1 = cylinderCenter_1[2] + cylinderRadius_1;
+    // Create a thin wall with minimal thickness centered at bumpStartZ_1
+        // (Removed extra raised bump wall as requested)
+
+    // Extra raised wall: place it at the front (near) edge of the turf instead of the far edge
+    const float frontEdgeZ_1 = centreZ_1; // front / near edge
+    glm::vec4 backWallFrontTL_1(-(wallGap + wallThickness), raisedWallTopY_1, frontEdgeZ_1, 1.0f);
+    glm::vec4 backWallFrontTR_1(1.0f + wallGap + wallThickness, raisedWallTopY_1, frontEdgeZ_1, 1.0f);
+    glm::vec4 backWallFrontBR_1(1.0f + wallGap + wallThickness, wallBottomY_1, frontEdgeZ_1, 1.0f);
+    glm::vec4 backWallFrontBL_1(-(wallGap + wallThickness), wallBottomY_1, frontEdgeZ_1, 1.0f);
+    // Place the back face of this raised strip slightly toward -Z using the wall thickness
+    glm::vec4 backWallBackTL_1(-(wallGap + wallThickness), raisedWallTopY_1, frontEdgeZ_1 - wallThickness, 1.0f);
+    glm::vec4 backWallBackTR_1(1.0f + wallGap + wallThickness, raisedWallTopY_1, frontEdgeZ_1 - wallThickness, 1.0f);
+    glm::vec4 backWallBackBR_1(1.0f + wallGap + wallThickness, wallBottomY_1, frontEdgeZ_1 - wallThickness, 1.0f);
+    glm::vec4 backWallBackBL_1(-(wallGap + wallThickness), wallBottomY_1, frontEdgeZ_1 - wallThickness, 1.0f);
+
+    Square<4> backWallFront_1(backWallFrontTL_1, backWallFrontTR_1, backWallFrontBR_1, backWallFrontBL_1);
+    Square<4> backWallBack_1(backWallBackTL_1, backWallBackTR_1, backWallBackBR_1, backWallBackBL_1);
+
+    Cube<4>* backWall_1 = new Cube<4>(backWallFront_1, backWallBack_1);
+    backWall_1->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    walls_1->addShape(backWall_1);
+
+    // --- Vertical hole cylinder at the raised front strip ---
+    // Top of the hole should be 0.001f higher than the turf top
+    const float turfBottomY_1 = halfHeight_1 - 0.24f;
+    const float turfHeight_1 = turfTopY_1 - turfBottomY_1; // should be 0.24f
+    const float holeExtra = 0.002f; // 0.001 above and 0.001 below turf
+    const float holeHeight_1 = turfHeight_1 + holeExtra;
+    const float holeRadius_1 = 0.06f; // reduced radius
+    const float holeCenterX_1 = 0.5f;
+    // Move hole to turf centre (not in the front wall)
+    // Place hole under the horizontal "dump" cylinder at the midpoint between its two previous Z placements
+    const float prevCylinderBackOffsetZ_1 = -2.0f; // previous back offset used earlier
+    const float holeCenterZ_1 = turfMidZ_1 + (prevCylinderBackOffsetZ_1 + cylinderBackOffsetZ_1) * 0.5f;
+    // place top at turfTopY_1 + 0.001f, so center is that minus half height
+    const float holeCenterY_1 = (turfTopY_1 + 0.001f) - (holeHeight_1 * 0.5f);
+    glm::vec4 holeCenter_1(holeCenterX_1, holeCenterY_1, holeCenterZ_1, 1.0f);
+    Cylinder<4>* turfHole_1 = new Cylinder<4>(holeCenter_1, holeRadius_1, holeHeight_1, 24, 1); // axis=1 => Y-axis (vertical)
+    turfHole_1->setColour(0, 0, 0);
+    Figure* holeFigure_1 = new Figure();
+    holeFigure_1->addShape(turfHole_1);
+
+    // --- Add longer raised strips on left and right walls that touch the raised front/back walls ---
+    // Make them span from the raised front edge to the turf back edge so they connect to the back wall
+    const float sideRaisedStartZ = frontEdgeZ_1; // start at the raised front strip
+    const float sideRaisedEndZ = centreZ_1 + difference_1; // extend to the turf back edge
+
+    // Left raised strip (on left wall x extents)
+    glm::vec4 leftRaisedFrontTL(-(wallGap), raisedWallTopY_1, sideRaisedStartZ, 1.0f);
+    glm::vec4 leftRaisedFrontTR(-(wallGap), raisedWallTopY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 leftRaisedFrontBR(-(wallGap), wallBottomY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 leftRaisedFrontBL(-(wallGap), wallBottomY_1, sideRaisedStartZ, 1.0f);
+
+    glm::vec4 leftRaisedBackTL(-(wallGap + wallThickness), raisedWallTopY_1, sideRaisedStartZ, 1.0f);
+    glm::vec4 leftRaisedBackTR(-(wallGap + wallThickness), raisedWallTopY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 leftRaisedBackBR(-(wallGap + wallThickness), wallBottomY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 leftRaisedBackBL(-(wallGap + wallThickness), wallBottomY_1, sideRaisedStartZ, 1.0f);
+
+    Square<4> leftRaisedFront(leftRaisedFrontTL, leftRaisedFrontTR, leftRaisedFrontBR, leftRaisedFrontBL);
+    Square<4> leftRaisedBack(leftRaisedBackTL, leftRaisedBackTR, leftRaisedBackBR, leftRaisedBackBL);
+    Cube<4>* leftRaised = new Cube<4>(leftRaisedFront, leftRaisedBack);
+    leftRaised->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    walls_1->addShape(leftRaised);
+
+    // Right raised strip (on right wall x extents)
+    glm::vec4 rightRaisedFrontTL(1.0f + wallGap, raisedWallTopY_1, sideRaisedStartZ, 1.0f);
+    glm::vec4 rightRaisedFrontTR(1.0f + wallGap, raisedWallTopY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 rightRaisedFrontBR(1.0f + wallGap, wallBottomY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 rightRaisedFrontBL(1.0f + wallGap, wallBottomY_1, sideRaisedStartZ, 1.0f);
+
+    glm::vec4 rightRaisedBackTL(1.0f + wallGap + wallThickness, raisedWallTopY_1, sideRaisedStartZ, 1.0f);
+    glm::vec4 rightRaisedBackTR(1.0f + wallGap + wallThickness, raisedWallTopY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 rightRaisedBackBR(1.0f + wallGap + wallThickness, wallBottomY_1, sideRaisedEndZ, 1.0f);
+    glm::vec4 rightRaisedBackBL(1.0f + wallGap + wallThickness, wallBottomY_1, sideRaisedStartZ, 1.0f);
+
+    Square<4> rightRaisedFront(rightRaisedFrontTL, rightRaisedFrontTR, rightRaisedFrontBR, rightRaisedFrontBL);
+    Square<4> rightRaisedBack(rightRaisedBackTL, rightRaisedBackTR, rightRaisedBackBR, rightRaisedBackBL);
+    Cube<4>* rightRaised = new Cube<4>(rightRaisedFront, rightRaisedBack);
+    rightRaised->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    walls_1->addShape(rightRaised);
+
+    scene.addObject(holeFigure_1); // Add the hole figure to the scene so it renders as a black hole in the turf
+    scene.addObject(turf_1);
+    scene.addObject(walls_1);
 
     
     int prismID = scene.getNumShapes() - 1;
