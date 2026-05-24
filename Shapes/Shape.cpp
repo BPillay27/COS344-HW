@@ -291,6 +291,12 @@ void Shape<n>::draw(){
         return;
     }
     glBindVertexArray(VAO);
+    // Constant vertex attributes are global state, not VAO state.
+    // Re-apply per-shape color at draw time when no per-vertex color buffer is bound.
+    if (colorVBO == 0u) {
+        glDisableVertexAttribArray(3);
+        glVertexAttrib3f(3, colour[0], colour[1], colour[2]);
+    }
     glDrawArrays(glDrawMode(), 0, vertexCount);
     glBindVertexArray(0);
 }

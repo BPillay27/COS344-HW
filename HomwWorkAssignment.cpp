@@ -182,24 +182,97 @@ int main() {
     glUniform1i(glGetUniformLocation(programID, "useAlphaMap"), 0);
     glUniform1i(glGetUniformLocation(programID, "useDisplacement"), 0);
     
-    float cameraSpeed = 0.07f;
+    float cameraSpeed = 0.0023f;
     gSpatialHash = new SpatialHash(2.5f);
     
     // Add red prism shape
-    glm::vec4 frontCenter(0.0f, -0.50f, 1.0f, 1.0f);
-    Square<4> frontFace(frontCenter, 3.0f, 2.0f);
+    float halfWidth_1 = 1.0f;   // Change this to make it wider or narrower
+    float halfHeight_1 = -0.25f; // Change this to make it taller or shorter
+    float centreZ_1 = -2.0f;
+    float difference_1= 4.5f; // Distance between front and back faces of the prism
 
+    // Front Face (Horizontal)
+    glm::vec4 startTL(halfWidth_1-1.0f,  halfHeight_1, centreZ_1, 1.0f);
+    glm::vec4 startTR( halfWidth_1,  halfHeight_1, centreZ_1, 1.0f);
+    glm::vec4 startBL(halfWidth_1-1.0f, halfHeight_1-0.24f, centreZ_1, 1.0f);
+    glm::vec4 startBR( halfWidth_1, halfHeight_1-0.24f, centreZ_1, 1.0f);
+    Square<4> start = Square(startTL, startTR, startBR, startBL);
 
-    glm::vec4 backCenter(0.0f, -1.50f, 1.0f, 1.0f);
-    Square<4> backFace(backCenter, 3.0f, 2.0f);
+    // Back Face (Farther rectangle to viewer: +0.025f)
+    glm::vec4 startTL2(halfWidth_1-1.0f,  halfHeight_1, centreZ_1 + difference_1 , 1.0f);
+    glm::vec4 startTR2( halfWidth_1,  halfHeight_1, centreZ_1 + difference_1 , 1.0f);
+    glm::vec4 startBL2(halfWidth_1-1.0f, halfHeight_1-0.24f, centreZ_1 + difference_1 , 1.0f);
+    glm::vec4 startBR2( halfWidth_1, halfHeight_1-0.24f, centreZ_1 + difference_1 , 1.0f);
+    Square<4> start2 = Square(startTL2, startTR2, startBR2, startBL2);
 
+    Cube<4>* Turf = new Cube<4>(start, start2);
+    Turf->setColour(9, 139, 74); // Green
     
-    Cube<4>* rectangularPrism = new Cube<4>(frontFace, backFace);
-    rectangularPrism->setColour(9, 139, 74);
-    scene.addShape(rectangularPrism);
+
+    // Three enclosing walls around the turf, leaving the -Z side open.
+    const float wallThickness = 0.05f;
+    const float wallGap = 0.01f;
+    const float wallTopY_1 = halfHeight_1 + 0.25f;
+    const float wallBottomY_1 = halfHeight_1 - 0.24f;
+    const float wallColorR_1 = 235;
+    const float wallColorG_1 = 183;
+    const float wallColorB_1 = 93;
+    
+    // Left wall (outside the turf, x < 0 side)
+    glm::vec4 leftWallFrontTL(-wallGap, wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 leftWallFrontTR(-wallGap, wallTopY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 leftWallFrontBR(-wallGap, wallBottomY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 leftWallFrontBL(-wallGap, wallBottomY_1, centreZ_1, 1.0f);
+    Square<4> leftWallFront(leftWallFrontTL, leftWallFrontTR, leftWallFrontBR, leftWallFrontBL);
+
+    glm::vec4 leftWallBackTL(-(wallGap + wallThickness), wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 leftWallBackTR(-(wallGap + wallThickness), wallTopY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 leftWallBackBR(-(wallGap + wallThickness), wallBottomY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 leftWallBackBL(-(wallGap + wallThickness), wallBottomY_1, centreZ_1, 1.0f);
+    Square<4> leftWallBack(leftWallBackTL, leftWallBackTR, leftWallBackBR, leftWallBackBL);
+
+    Cube<4>* leftWall = new Cube<4>(leftWallFront, leftWallBack);
+    leftWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    scene.addShape(leftWall);
+
+    // Right wall (outside the turf, x > 1 side)
+    glm::vec4 rightWallFrontTL(1.0f + wallGap, wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 rightWallFrontTR(1.0f + wallGap, wallTopY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 rightWallFrontBR(1.0f + wallGap, wallBottomY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 rightWallFrontBL(1.0f + wallGap, wallBottomY_1, centreZ_1, 1.0f);
+    Square<4> rightWallFront(rightWallFrontTL, rightWallFrontTR, rightWallFrontBR, rightWallFrontBL);
+
+    glm::vec4 rightWallBackTL(1.0f + wallGap + wallThickness, wallTopY_1, centreZ_1, 1.0f);
+    glm::vec4 rightWallBackTR(1.0f + wallGap + wallThickness, wallTopY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 rightWallBackBR(1.0f + wallGap + wallThickness, wallBottomY_1, centreZ_1 + difference_1, 1.0f);
+    glm::vec4 rightWallBackBL(1.0f + wallGap + wallThickness, wallBottomY_1, centreZ_1, 1.0f);
+    Square<4> rightWallBack(rightWallBackTL, rightWallBackTR, rightWallBackBR, rightWallBackBL);
+
+    Cube<4>* rightWall = new Cube<4>(rightWallFront, rightWallBack);
+    rightWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    scene.addShape(rightWall);
+
+    // Third wall moved to the -Z side
+    glm::vec4 farWallFrontTL(-wallGap, wallTopY_1, centreZ_1 - wallGap, 1.0f);
+    glm::vec4 farWallFrontTR(1.0f + wallGap, wallTopY_1, centreZ_1 - wallGap, 1.0f);
+    glm::vec4 farWallFrontBR(1.0f + wallGap, wallBottomY_1, centreZ_1 - wallGap, 1.0f);
+    glm::vec4 farWallFrontBL(-wallGap, wallBottomY_1, centreZ_1 - wallGap, 1.0f);
+    Square<4> farWallFront(farWallFrontTL, farWallFrontTR, farWallFrontBR, farWallFrontBL);
+
+    glm::vec4 farWallBackTL(-wallGap, wallTopY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
+    glm::vec4 farWallBackTR(1.0f + wallGap, wallTopY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
+    glm::vec4 farWallBackBR(1.0f + wallGap, wallBottomY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
+    glm::vec4 farWallBackBL(-wallGap, wallBottomY_1, centreZ_1 - wallGap - wallThickness, 1.0f);
+    Square<4> farWallBack(farWallBackTL, farWallBackTR, farWallBackBR, farWallBackBL);
+
+    Cube<4>* farWall = new Cube<4>(farWallFront, farWallBack);
+    farWall->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
+    scene.addShape(farWall);
+    scene.addShape(Turf);
+
     
     int prismID = scene.getNumShapes() - 1;
-    glm::vec3 hashPosition((frontCenter.x + backCenter.x) / 2.0f, (frontCenter.y + backCenter.y) / 2.0f, (frontCenter.z + backCenter.z) / 2.0f);
+    glm::vec3 hashPosition(0.0f, 0.0f, centreZ_1 + 0.0125f);
     if (gSpatialHash != nullptr) gSpatialHash->insert(prismID, hashPosition);
 
     scene.createGLBuffers();
