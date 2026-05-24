@@ -25,6 +25,7 @@ public:
     void zoom(int percent);
     void draw();
     void setColour(int r, int g, int b, float a);
+    void setShininess(float s);
     Shape<4>* getShape() const;
     
     void createGLBuffers();

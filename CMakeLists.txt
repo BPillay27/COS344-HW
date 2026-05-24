@@ -39,26 +39,34 @@ FetchContent_Declare(assimp
 )
 FetchContent_MakeAvailable(assimp)
 
-# Add source to this project's executable.
-# NOTE: Template implementation files (Shape.cpp, transformation.cpp and all Shape subclass .cpp files)
-# are included in their corresponding .h headers and should NOT be listed here to avoid duplicate definitions
-add_executable (HomwWorkAssignment 
-    "Test.cpp"
+# Common source files shared by both executables
+set(COMMON_SOURCES
     "Figure.cpp"
     "Object.cpp"
     "RenderState.cpp"
     "Shape3D.cpp"
     "shader.cpp"
+    "SpatialHash.cpp"
+    "LayoutReader.cpp"
     "Shapes/light.cpp"
 )
 
-# Include GLM headers for this target
-target_include_directories(HomwWorkAssignment PRIVATE ${glm_SOURCE_DIR})
+# Create first executable from Test.cpp
+add_executable(HomwWorkAssignment 
+    "Test.cpp"
+    ${COMMON_SOURCES}
+)
 
-# Include Assimp headers
+# Create second executable from HomwWorkAssignment.cpp
+add_executable(TestProgram
+    "HomwWorkAssignment.cpp"
+    ${COMMON_SOURCES}
+)
+
+# Configure first executable (HomwWorkAssignment from Test.cpp)
+target_include_directories(HomwWorkAssignment PRIVATE ${glm_SOURCE_DIR})
 target_include_directories(HomwWorkAssignment PRIVATE ${assimp_SOURCE_DIR}/include)
 
-# Include GLEW and GLFW headers if found
 if(GLEW_FOUND)
     target_include_directories(HomwWorkAssignment PRIVATE ${GLEW_INCLUDE_DIRS})
 endif()
@@ -67,15 +75,8 @@ if(glfw3_FOUND)
     target_include_directories(HomwWorkAssignment PRIVATE ${GLFW3_INCLUDE_DIR})
 endif()
 
-# Link libraries to the target
-target_link_libraries(HomwWorkAssignment PRIVATE 
-    assimp
-)
-
-# Link libraries to the target
 target_link_libraries(HomwWorkAssignment PRIVATE assimp)
 
-# Link graphics libraries if found
 if(glfw3_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE glfw)
 endif()
@@ -84,8 +85,32 @@ if(GLEW_FOUND)
     target_link_libraries(HomwWorkAssignment PRIVATE GLEW::GLEW)
 endif()
 
+# Configure second executable (TestProgram from HomwWorkAssignment.cpp)
+target_include_directories(TestProgram PRIVATE ${glm_SOURCE_DIR})
+target_include_directories(TestProgram PRIVATE ${assimp_SOURCE_DIR}/include)
+
+if(GLEW_FOUND)
+    target_include_directories(TestProgram PRIVATE ${GLEW_INCLUDE_DIRS})
+endif()
+
+if(glfw3_FOUND)
+    target_include_directories(TestProgram PRIVATE ${GLFW3_INCLUDE_DIR})
+endif()
+
+target_link_libraries(TestProgram PRIVATE assimp)
+
+if(glfw3_FOUND)
+    target_link_libraries(TestProgram PRIVATE glfw)
+endif()
+
+if(GLEW_FOUND)
+    target_link_libraries(TestProgram PRIVATE GLEW::GLEW)
+endif()
+
+# C++ standard
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HomwWorkAssignment PROPERTY CXX_STANDARD 17)
+  set_property(TARGET TestProgram PROPERTY CXX_STANDARD 17)
 endif()
 
 # Set HomwWorkAssignment as the startup project for Visual Studio

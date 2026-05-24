@@ -1,9 +1,6 @@
 template<int n>
 Cube<n>::Cube(const glm::vec<n,float>& center, float height, float width, float depth){
 	this->center = center;
-	this->height = height;
-	this->width = width;
-	this->depth = depth;
 
 	float hx = width/2.0f;
 	float hy = height/2.0f;
@@ -200,7 +197,9 @@ GLenum Cube<n>::glDrawMode() const {
 template<int n>
 void Cube<n>::print() const{
 	std::cout << "_ Cube Center _" << std::endl;
-	center.print();
+	std::cout << "Center: (" << center[0];
+	for(int i = 1; i < n; i++) std::cout << ", " << center[i];
+	std::cout << ")" << std::endl;
 	std::cout << "_ Front Face _" << std::endl; f1.print();
 	std::cout << "_ Back Face _" << std::endl; f2.print();
 	std::cout << "_ Left Face _" << std::endl; f3.print();

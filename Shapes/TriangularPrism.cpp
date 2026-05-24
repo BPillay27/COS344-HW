@@ -44,8 +44,7 @@ template<int n>
 TriangularPrism<n>::TriangularPrism(const TriangularPrism<n>& other) :
     Shape<n>(other),
     triangle1(other.triangle1), triangle2(other.triangle2),
-    side1(other.side1), side2(other.side2), side3(other.side3),
-    VAO(other.VAO), VBO(other.VBO), EBO(other.EBO) {
+    side1(other.side1), side2(other.side2), side3(other.side3) {
 }
 
 template<int n>
@@ -161,10 +160,14 @@ std::string TriangularPrism<n>::fprint() const{
 }
 
 template<int n>
+GLenum TriangularPrism<n>::glDrawMode() const{
+    return GL_TRIANGLES;
+}
+
+template<int n>
 void TriangularPrism<n>::zoom(int percent){
     float scale = 1.0f + (percent / 100.0f);
-    glm::mat<n,n,float> scaleMatrix;
-    scaleMatrix.identity();
+    glm::mat<n,n,float> scaleMatrix = glm::mat<n,n,float>(1.0f);
     for(int i = 0; i < n-1; i++) scaleMatrix[i][i] = scale;
     (*this) *= scaleMatrix;
 }
@@ -172,8 +175,7 @@ void TriangularPrism<n>::zoom(int percent){
 template<int n>
 void TriangularPrism<n>::rotate(int degrees){
     float rad = degrees * 3.14159265358979323846f / 180.0f;
-    glm::mat<n,n,float> rotMatrix;
-    rotMatrix.identity();
+    glm::mat<n,n,float> rotMatrix = glm::mat<n,n,float>(1.0f);
     rotMatrix[0][0] = cosf(rad);
     rotMatrix[0][1] = -sinf(rad);
     rotMatrix[1][0] = sinf(rad);

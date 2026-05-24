@@ -12,6 +12,7 @@ template <int n>
 class Shape{
     protected:
         float colour[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        float shininess = 0.0f;  // Default shininess for Blinn-Phong lighting
         GLuint VAO = 0u;
         GLuint VBO = 0u;
         GLuint EBO = 0u;
@@ -20,6 +21,10 @@ class Shape{
         GLuint normVBO = 0u;
         GLuint colorVBO = 0u;
         int vertexCount = 0; // number of vertices (not floats)
+        // Texture map filenames for serialization/deserialization
+        std::string colorMapFile = "";
+        std::string alphaMapFile = "";
+        std::string displacementMapFile = "";
     public:
         virtual Shape& operator*=(const glm::mat<n,n,float>&) =0;
         virtual Shape* operator*(const glm::mat<n,n,float>&) const =0;
@@ -34,8 +39,15 @@ class Shape{
         virtual std::string fprint() const = 0;
         virtual void setColour(int r, int g, int b, float a=1.0f);
         float* getColour() const;
-        virtual void zoom(int percent)=0;
+        void updateVertexColourAttribute();
+        virtual void setShininess(float s);
+        float getShininess() const;
+        void setTextureMap(const std::string& colorFile, const std::string& alphaFile, const std::string& displacementFile);
+        std::string getColorMapFile() const;
+        std::string getAlphaMapFile() const;
+        std::string getDisplacementMapFile() const;
         virtual void rotate(int degrees)=0;
+        virtual void zoom(int percent) {}
         virtual void createGLBuffers(GLenum usage = GL_STATIC_DRAW);
         virtual void updateGLBuffers(GLenum usage = GL_DYNAMIC_DRAW);
         // Set per-vertex colors (RGB floats, numFloats must be verts*3)
