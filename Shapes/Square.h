@@ -28,14 +28,15 @@ class Square: public Shape<n> {
         virtual int getNumPoints() const;
 
         virtual void print() const{
-            std::cout << "_ P1 _ " << std::endl;
-            tl.print();
-            std::cout << "_ P2 _ " << std::endl;
-            tr.print();
-            std::cout << "_ P3 _ " <<std::endl;
-            br.print();
-            std::cout << "_ P4 _ " << std::endl;
-            bl.print();
+            auto printVec = [](const char* label, const glm::vec<n,float>& v){
+                std::cout << label;
+                for (int i = 0; i < n; ++i) std::cout << v[i] << " ";
+                std::cout << std::endl;
+            };
+            printVec("_ P1 _ ", tl);
+            printVec("_ P2 _ ", tr);
+            printVec("_ P3 _ ", br);
+            printVec("_ P4 _ ", bl);
         }
         virtual std::string fprint() const;
         void zoom(int percent);
