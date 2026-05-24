@@ -238,6 +238,7 @@ int main()
 
     /**********************HOLE 6*************************** */
     // Hole 6 - Lower green rectangular prism
+    Figure* hole_6 = new Figure();
     float halfWidth_6 = 1.8f;
     float halfHeight_6 = 0.20f;
 
@@ -266,7 +267,7 @@ int main()
     // Create prism
     Cube<4> *rectangularPrism_6 = new Cube<4>(frontFace_6, backFace_6);
     rectangularPrism_6->setColour(9, 139, 74); // Green
-    scene.addShape(rectangularPrism_6);
+    hole_6->addShape(rectangularPrism_6);
 
     // Second rectangular prism for Hole 6 - rotated around Z axis
 
@@ -327,7 +328,7 @@ int main()
     // Create second prism
     Cube<4> *rectangularPrism2_6 = new Cube<4>(frontFace2_6, backFace2_6);
     rectangularPrism2_6->setColour(9, 139, 74); // Green
-    scene.addShape(rectangularPrism2_6);
+    hole_6->addShape(rectangularPrism2_6);
 
     // Green sphere
     glm::vec4 sphereCenter_6(1.5f, -0.7f, 0.2f, 1.0f); // xyz
@@ -343,7 +344,7 @@ int main()
         sphereSlices_6);
 
     greenSphere_6->setColour(9, 139, 74); // Green
-    scene.addShape(greenSphere_6);
+    hole_6->addShape(greenSphere_6);
 
     // Hole 6 barriers around the ends of the green rectangles
     // Barrier colour: (235, 183, 93)
@@ -383,7 +384,7 @@ int main()
 
     Cube<4> *leftBarrier_6 = new Cube<4>(leftBarrierFront_6, leftBarrierBack_6);
     leftBarrier_6->setColour(235, 183, 93);
-    scene.addShape(leftBarrier_6);
+    hole_6->addShape(leftBarrier_6);
 
     // Black cylinder
     glm::vec4 cylinderCenter_6(-0.9f, -0.73f, 1.0f, 1.0f);
@@ -406,7 +407,8 @@ int main()
         cylinderAxis_6);
 
     blackCylinder_6->setColour(0, 0, 0); // Black
-    scene.addShape(blackCylinder_6);
+    hole_6->addShape(blackCylinder_6);
+    scene.addObject(hole_6);
     /*************************************************** */
 
     scene.createGLBuffers();
