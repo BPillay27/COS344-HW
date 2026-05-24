@@ -30,6 +30,7 @@ uniform float uPointLightRange;
 uniform float uShininess;
 
 uniform mat3 uNormalMatrix;
+uniform mat4 uMVP;
 
 out vec2 TexCoords;
 out vec3 VertexColor;
@@ -50,7 +51,7 @@ void main() {
     vec3 V = normalize(uCameraPos - newPos);
     
     // Ambient lighting (visible even in shadows)
-    vec3 ambientLight = vec3(0.45);
+    vec3 ambientLight = vec3(0.7);
     
     // ===== DIRECTIONAL LIGHT =====
     vec3 L_dir = normalize(uLightDir);
@@ -100,5 +101,5 @@ void main() {
     
     VertexColor = finalColor;
 
-    gl_Position = uProjection * uView * uModel * vec4(newPos, 1.0);
+    gl_Position = uMVP * vec4(newPos, 1.0);
 }

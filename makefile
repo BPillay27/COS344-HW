@@ -1,32 +1,54 @@
-# Makefile for COS344 Homework - Uses CMake build system
-# Run: make build, make run, or make all
+CXX      = g++
+CXXFLAGS = -std=c++11 -Wall -O2
+LIBS     = -lglfw -lGLEW -lGL
 
-BUILD_DIR = out/build/x64-debug
-EXECUTABLE = $(BUILD_DIR)/HomwWorkAssignment.exe
+# GLM: prefer the system package (apt install libglm-dev);
+# fall back to the copy that CMake FetchContent downloaded.
+GLM_SYSTEM := $(shell find /usr/include/glm -name glm.hpp 2>/dev/null | head -1)
+GLM_LOCAL  := $(shell find out/build -name glm.hpp 2>/dev/null | head -1)
 
-.PHONY: build run clean all help
+ifneq ($(GLM_SYSTEM),)
+  # System install found — no extra -I needed
+else ifneq ($(GLM_LOCAL),)
+  # Strip the trailing /glm/glm.hpp to get the directory that CONTAINS glm/.
+  GLM_DIR   := $(patsubst %/glm/glm.hpp,%,$(GLM_LOCAL))
+  CXXFLAGS  += -I$(GLM_DIR)
+  $(info NOTE: using bundled GLM at $(GLM_DIR). Run: sudo apt install libglm-dev)
+else
+  $(error GLM not found. Run: sudo apt install libglm-dev)
+endif
 
-help:
-	@echo "Available targets:"
-	@echo "  make build   - Build the project using CMake"
-	@echo "  make run     - Run the executable"
-	@echo "  make all     - Build and run"
-	@echo "  make clean   - Clean build artifacts"
+# Every .cpp in the root directory (excluding the old Windows stub).
+ROOT_SRCS  := $(filter-out HomwWorkAssignment.cpp, $(wildcard *.cpp))
 
-build: CMakeLists.txt
-	@echo "Building project with CMake..."
-	cmake --build $(BUILD_DIR) --config Debug
+# Shape template .cpp files are #included directly by their .h headers
+# (C++ template instantiation requires the definition to be visible at the
+# call site). Compiling them as separate translation units causes duplicate
+# symbol errors. Only non-template Shape files need separate compilation.
+# Check: grep -l '#include.*\.cpp"' Shapes/*.h lists all header-included ones.
+SHAPE_SRCS := Shapes/light.cpp
 
-$(EXECUTABLE): build
-	@echo "Executable ready: $(EXECUTABLE)"
+SRCS       := $(ROOT_SRCS) $(SHAPE_SRCS)
 
-run: $(EXECUTABLE)
-	@echo "Running HomwWorkAssignment.exe..."
-	$(EXECUTABLE)
+OBJS   := $(SRCS:.cpp=.o)
+TARGET := MiniGolf
 
-all: build run
+.PHONY: all clean run
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	@echo "Build successful: ./$(TARGET)"
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+Shapes/%.o: Shapes/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+run: all
+	./$(TARGET)
 
 clean:
-	@echo "Cleaning build artifacts..."
-	cmake --build $(BUILD_DIR) --target clean
-	@if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
+	rm -f $(OBJS) $(TARGET)
