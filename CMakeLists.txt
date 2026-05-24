@@ -42,12 +42,14 @@ FetchContent_MakeAvailable(assimp)
 # Add source to this project's executable.
 # NOTE: Template implementation files (Shape.cpp, transformation.cpp and all Shape subclass .cpp files)
 # are included in their corresponding .h headers and should NOT be listed here to avoid duplicate definitions
-add_executable (HomwWorkAssignment 
+add_executable (HomwWorkAssignment
     "Test.cpp"
     "Figure.cpp"
     "Object.cpp"
     "RenderState.cpp"
     "Shape3D.cpp"
+    "Drone.cpp"
+    "Camera.cpp"
     "shader.cpp"
     "Shapes/light.cpp"
 )
