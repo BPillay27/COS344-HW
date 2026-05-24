@@ -33,6 +33,11 @@ using namespace std;
 #include "Shape3D.h"
 #include "RenderState.h"
 #include "SpatialHash.h"
+#include "Drone.h"
+#include "Hole8.h"
+#include "Hole9.h"
+#include "Hole10.h"
+#include "Camera.h"
 
 #include "Drone.h"
 #include "Hole8.h"
@@ -41,6 +46,9 @@ using namespace std;
 // Global variables
 SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
+Drone* gDrone = nullptr;
+
+
 
 Drone* gDrone = nullptr;
 
@@ -179,10 +187,11 @@ int main() {
    
     glfwSetKeyCallback(window, keyCallback);
     
-    GLint locNM = glGetUniformLocation(programID, "uNormalMatrix");
-    GLint locView = glGetUniformLocation(programID, "uView");
-    GLint locModel = glGetUniformLocation(programID, "uModel");
+    GLint locNM         = glGetUniformLocation(programID, "uNormalMatrix");
+    GLint locView       = glGetUniformLocation(programID, "uView");
+    GLint locModel      = glGetUniformLocation(programID, "uModel");
     GLint locProjection = glGetUniformLocation(programID, "uProjection");
+    GLint locMVP        = glGetUniformLocation(programID, "uMVP");
     
     glEnable(GL_DEPTH_TEST);
     
@@ -215,6 +224,14 @@ int main() {
     float cameraSpeed = 0.0023f;
     gSpatialHash = new SpatialHash(2.5f);
     
+    // Drone init
+    gDrone = new Drone();
+    gDrone->createGLBuffers();
+
+    // Build Hole geometry and register it in the global scene.
+    buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
+    buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
+    buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
     Figure* turf_1 = new Figure();
     Figure* walls_1 = new Figure();
     // Add red prism shape
@@ -421,7 +438,12 @@ int main() {
     if (gSpatialHash != nullptr) gSpatialHash->insert(prismID, hashPosition);
 
     scene.createGLBuffers();
-    
+    std::cout << "Hole 8 geometry loaded. Program initialised successfully." << std::endl;
+    std::cout << "Hole 9 geometry loaded. Program initialised successfully." << std::endl;
+    std::cout << "Hole 10 geometry loaded. Program initialised successfully." << std::endl;
+
+    float lastTime = (float)glfwGetTime();
+
     do {
         glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
 
@@ -503,7 +525,6 @@ int main() {
 
         glm::mat4 miniMVP = orthogonalProjection * miniMapView * model;
         if (locMVP >= 0) glUniformMatrix4fv(locMVP, 1, GL_FALSE, glm::value_ptr(miniMVP));
-
 
         renderObjects(programID, miniMapView);
         

@@ -19,7 +19,7 @@ else
 endif
 
 # Every .cpp in the root directory (excluding the old Windows stub).
-ROOT_SRCS  := $(filter-out HomwWorkAssignment.cpp, $(wildcard *.cpp))
+ROOT_SRCS  := $(filter-out Test.cpp, $(wildcard *.cpp))
 
 # Shape template .cpp files are #included directly by their .h headers
 # (C++ template instantiation requires the definition to be visible at the
