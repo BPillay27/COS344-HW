@@ -377,8 +377,9 @@ int main() {
     const float turfBottomY_1 = halfHeight_1 - 0.24f;
     const float turfHeight_1 = turfTopY_1 - turfBottomY_1; // should be 0.24f
     const float holeExtra = 0.002f; // 0.001 above and 0.001 below turf
-    const float holeHeight_1 = turfHeight_1 + holeExtra;
-    const float holeRadius_1 = 0.06f; // reduced radius
+    const float holeScaleFactor_1 = 3.0f;
+    const float holeHeight_1 = (turfHeight_1 + holeExtra) * holeScaleFactor_1;
+    const float holeRadius_1 = 0.06f * holeScaleFactor_1;
     const float holeCenterX_1 = 0.5f;
     // Move hole to turf centre (not in the front wall)
     // Place hole under the horizontal "dump" cylinder at the midpoint between its two previous Z placements
@@ -431,7 +432,7 @@ int main() {
     rightRaised->setColour((int)wallColorR_1, (int)wallColorG_1, (int)wallColorB_1, 1.0f);
     walls_1->addShape(rightRaised);
 
-    Imported<4>* dogModel = new Imported<4>("Hole_1_Dog.glb");
+    Imported<4>* dogModel = new Imported<4>("Models/Hole_1_Dog.glb");
     Shape3D* dogShape = new Shape3D(dogModel);
     dogShape->zoom(-80);
     float dogX = 0.5f;                               // Matches cylinderCenter_1 X
@@ -447,9 +448,7 @@ int main() {
     holeFigure_1->addObject(dogFigure);
     holeFigure_1->addObject(walls_1);
 
-    holeFigure_1->move(-0.5f, 1.0f, 0.0f); // Adjust position to align with the turf and walls
-
-    holeFigure_1->zoom(-10); // Scale the entire hole down by 10%
+    holeFigure_1->move(-0.25f, 0.750f, 0.0f); // Adjust position to align with the turf and walls
     // TO MOVE HOLE ONE 
 
     scene.addObject(holeFigure_1);
@@ -459,6 +458,370 @@ int main() {
     int prismID = scene.getNumShapes() - 1;
     glm::vec3 hashPosition(0.0f, 0.0f, centreZ_1 + 0.0125f);
     if (gSpatialHash != nullptr) gSpatialHash->insert(prismID, hashPosition);
+
+
+    //******************************HOLE 3********************************************* */
+    Figure *hole_3 = new Figure();
+
+    float halfWidth_3 = 3.1f;
+    float halfHeight_3 = 0.20f;
+
+    // Move Hole 3 significantly to the right
+    float centreX_3 = 9.0f;
+
+    // Lower Y value = lower on screen/world
+    float centreY_3 = -0.75f;
+
+    float centreZ_3 = -0.1f;
+    float depth_3 = 5.0f;
+
+    // Front face
+    glm::vec4 frontTL_3(centreX_3 - halfWidth_3, centreY_3 + halfHeight_3, centreZ_3, 1.0f);
+    glm::vec4 frontTR_3(centreX_3 + halfWidth_3, centreY_3 + halfHeight_3, centreZ_3, 1.0f);
+    glm::vec4 frontBR_3(centreX_3 + halfWidth_3, centreY_3 - halfHeight_3, centreZ_3, 1.0f);
+    glm::vec4 frontBL_3(centreX_3 - halfWidth_3, centreY_3 - halfHeight_3, centreZ_3, 1.0f);
+
+    Square<4> frontFace_3(frontTL_3, frontTR_3, frontBR_3, frontBL_3);
+
+    // Back face
+    glm::vec4 backTL_3(centreX_3 - halfWidth_3, centreY_3 + halfHeight_3, centreZ_3 + depth_3, 1.0f);
+    glm::vec4 backTR_3(centreX_3 + halfWidth_3, centreY_3 + halfHeight_3, centreZ_3 + depth_3, 1.0f);
+    glm::vec4 backBR_3(centreX_3 + halfWidth_3, centreY_3 - halfHeight_3, centreZ_3 + depth_3, 1.0f);
+    glm::vec4 backBL_3(centreX_3 - halfWidth_3, centreY_3 - halfHeight_3, centreZ_3 + depth_3, 1.0f);
+
+    Square<4> backFace_3(backTL_3, backTR_3, backBR_3, backBL_3);
+
+    // Create prism
+    Cube<4> *rectangularPrism_3 = new Cube<4>(frontFace_3, backFace_3);
+    rectangularPrism_3->setColour(9, 139, 74); // Green
+    hole_3->addShape(rectangularPrism_3);
+
+    //------------------------------------------------------------------------------------------
+    // Thin edge barriers around Hole 3 prism
+    // Barrier colour: (235, 183, 93)
+
+    float barrierThickness_3 = 0.12f;
+    float barrierHeight_3 = 0.18f;
+
+    // Place barriers slightly above the green prism
+    float barrierBottomY_3 = centreY_3 + halfHeight_3;
+    float barrierTopY_3 = barrierBottomY_3 + barrierHeight_3;
+
+    // Helper lambda to create a rectangular prism using min/max bounds
+    auto addBarrier_3 = [&](float xMin, float xMax, float yMin, float yMax, float zMin, float zMax)
+    {
+        // Front face at zMin
+        glm::vec4 fTL(xMin, yMax, zMin, 1.0f);
+        glm::vec4 fTR(xMax, yMax, zMin, 1.0f);
+        glm::vec4 fBR(xMax, yMin, zMin, 1.0f);
+        glm::vec4 fBL(xMin, yMin, zMin, 1.0f);
+
+        Square<4> front(fTL, fTR, fBR, fBL);
+
+        // Back face at zMax
+        glm::vec4 bTL(xMin, yMax, zMax, 1.0f);
+        glm::vec4 bTR(xMax, yMax, zMax, 1.0f);
+        glm::vec4 bBR(xMax, yMin, zMax, 1.0f);
+        glm::vec4 bBL(xMin, yMin, zMax, 1.0f);
+
+        Square<4> back(bTL, bTR, bBR, bBL);
+
+        Cube<4> *barrier = new Cube<4>(front, back);
+        barrier->setColour(235, 183, 93);
+        hole_3->addShape(barrier);
+    };
+
+    // Main prism bounds
+    float prismLeft_3 = centreX_3 - halfWidth_3;
+    float prismRight_3 = centreX_3 + halfWidth_3;
+    float prismFrontZ_3 = centreZ_3;
+    float prismBackZ_3 = centreZ_3 + depth_3;
+
+    // Left edge barrier
+    addBarrier_3(
+        prismLeft_3 - barrierThickness_3,
+        prismLeft_3,
+        barrierBottomY_3,
+        barrierTopY_3,
+        prismFrontZ_3,
+        prismBackZ_3);
+
+    // Right edge barrier
+    addBarrier_3(
+        prismRight_3,
+        prismRight_3 + barrierThickness_3,
+        barrierBottomY_3,
+        barrierTopY_3,
+        prismFrontZ_3,
+        prismBackZ_3);
+
+    // Front edge barrier
+    addBarrier_3(
+        prismLeft_3,
+        prismRight_3,
+        barrierBottomY_3,
+        barrierTopY_3,
+        prismFrontZ_3 - barrierThickness_3,
+        prismFrontZ_3);
+
+    // Back edge barrier
+    addBarrier_3(
+        prismLeft_3,
+        prismRight_3,
+        barrierBottomY_3,
+        barrierTopY_3,
+        prismBackZ_3,
+        prismBackZ_3 + barrierThickness_3);
+
+    //---------------------------------------------------------------------------------------
+    // Add Hole 3 to the main sceness
+
+    glm::vec4 importedCentre_3(centreX_3, centreY_3 + 0.95f, centreZ_3 + 2.5f, 1.0f);
+
+    Imported<4> *importedModel_3 = new Imported<4>(
+        "Models/Hole_1_Dog.glb",
+        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), // load at origin first
+        0.7f                               // scale
+    );
+
+    // Rotate while still at origin
+    *importedModel_3 *= roty<4>(90);
+
+    // Move to the final position you want
+    *importedModel_3 *= translation<4>(
+        importedCentre_3[0],
+        importedCentre_3[1],
+        importedCentre_3[2]);
+
+    importedModel_3->setColour(9, 139, 74);
+    hole_3->addShape(importedModel_3);
+
+    //--------------------------------------------------
+    glm::vec4 importedCentre_3_1(centreX_3 - 1.5f, centreY_3 + 0.38f, centreZ_3 + 0.85f, 1.0f);
+
+    Imported<4> *importedModel_3_1 = new Imported<4>(
+        "Models/Hole_3_Deformed_Rock.glb",
+        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), // load at origin first
+        0.2f                               // scale
+    );
+
+    // Rotate while still at origin
+    *importedModel_3_1 *= roty<4>(90);
+
+    // Move to the final position you want
+    *importedModel_3_1 *= translation<4>(
+        importedCentre_3_1[0],
+        importedCentre_3_1[1],
+        importedCentre_3_1[2]);
+
+    importedModel_3_1->setColour(9, 139, 74);
+    hole_3->addShape(importedModel_3_1);
+
+    //------------------------------------------------------
+    glm::vec4 cylinderCenter_3(
+        frontBL_3[0] + 0.3f,
+        frontBL_3[1] + 0.0f,
+        frontBL_3[2] + 0.8,
+        1.0f);
+
+    float cylinderRadius_3 = 0.20f;
+    float cylinderHeight_3 = 0.8f;
+    int cylinderResolution_3 = 32;
+
+    // Axis:
+    // 0 = along X
+    // 1 = along Y
+    // 2 = along Z
+    int cylinderAxis_3 = 1;
+
+    Cylinder<4> *blackCylinder_3 = new Cylinder<4>(
+        cylinderCenter_3,
+        cylinderRadius_3,
+        cylinderHeight_3,
+        cylinderResolution_3,
+        cylinderAxis_3);
+
+    blackCylinder_3->setColour(67, 0, 0); // Black
+    hole_3->addShape(blackCylinder_3);
+
+    scene.addObject(hole_3);
+
+    //************************************************************************** */
+
+    /**********************HOLE 6*************************** */
+    // Hole 6 - Lower green rectangular prism
+    Figure *hole_6 = new Figure();
+    float halfWidth_6 = 1.8f;
+    float halfHeight_6 = 0.20f;
+
+    // Lower Y value = lower on screen/world
+    float centreY_6 = -0.75f;
+
+    float centreZ_6 = -0.1f;
+    float depth_6 = 2.5f;
+
+    // Front face
+    glm::vec4 frontTL_6(-halfWidth_6, centreY_6 + halfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 frontTR_6(halfWidth_6, centreY_6 + halfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 frontBR_6(halfWidth_6, centreY_6 - halfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 frontBL_6(-halfWidth_6, centreY_6 - halfHeight_6, centreZ_6, 1.0f);
+
+    Square<4> frontFace_6(frontTL_6, frontTR_6, frontBR_6, frontBL_6);
+
+    // Back face
+    glm::vec4 backTL_6(-halfWidth_6, centreY_6 + halfHeight_6, centreZ_6 + depth_6, 1.0f);
+    glm::vec4 backTR_6(halfWidth_6, centreY_6 + halfHeight_6, centreZ_6 + depth_6, 1.0f);
+    glm::vec4 backBR_6(halfWidth_6, centreY_6 - halfHeight_6, centreZ_6 + depth_6, 1.0f);
+    glm::vec4 backBL_6(-halfWidth_6, centreY_6 - halfHeight_6, centreZ_6 + depth_6, 1.0f);
+
+    Square<4> backFace_6(backTL_6, backTR_6, backBR_6, backBL_6);
+
+    // Create prism
+    Cube<4> *rectangularPrism_6 = new Cube<4>(frontFace_6, backFace_6);
+    rectangularPrism_6->setColour(9, 139, 74); // Green
+    hole_6->addShape(rectangularPrism_6);
+
+    // Second rectangular prism for Hole 6 - rotated around Z axis
+
+    float centreX2_6 = 2.4f;      // Move to the right
+    float centreY2_6 = centreY_6; // Same Y level
+    float centreZ2_6 = 2.0f;      // Middle of prism in Z
+    float angleDeg_6 = 35.0f;     // Angle between the two prisms
+    float angleRad_6 = angleDeg_6 * 3.14159265f / 180.0f;
+
+    // Rotate around Y axis (so Y stays the same, angle is made in X-Z plane)
+    auto rotateAroundY_6 = [&](float x, float z) -> glm::vec2
+    {
+        float dx = x - centreX2_6;
+        float dz = z - centreZ2_6;
+
+        float newX = dx * cos(angleRad_6) - dz * sin(angleRad_6);
+        float newZ = dx * sin(angleRad_6) + dz * cos(angleRad_6);
+
+        return glm::vec2(centreX2_6 + newX, centreZ2_6 + newZ);
+    };
+
+    // Local unrotated corners of an IDENTICAL prism
+    float left2_6 = centreX2_6 - halfWidth_6;
+    float right2_6 = centreX2_6 + halfWidth_6;
+    float top2_6 = centreY2_6 + halfHeight_6;
+    float bottom2_6 = centreY2_6 - halfHeight_6;
+    float front2_6 = centreZ2_6 - depth_6 / 2.0f;
+    float back2_6 = centreZ2_6 + depth_6 / 2.0f;
+
+    // Rotate front-face XZ coordinates
+    glm::vec2 frontTL_xz_6 = rotateAroundY_6(left2_6, front2_6);
+    glm::vec2 frontTR_xz_6 = rotateAroundY_6(right2_6, front2_6);
+    glm::vec2 frontBR_xz_6 = rotateAroundY_6(right2_6, front2_6);
+    glm::vec2 frontBL_xz_6 = rotateAroundY_6(left2_6, front2_6);
+
+    // Rotate back-face XZ coordinates
+    glm::vec2 backTL_xz_6 = rotateAroundY_6(left2_6, back2_6);
+    glm::vec2 backTR_xz_6 = rotateAroundY_6(right2_6, back2_6);
+    glm::vec2 backBR_xz_6 = rotateAroundY_6(right2_6, back2_6);
+    glm::vec2 backBL_xz_6 = rotateAroundY_6(left2_6, back2_6);
+
+    // Front face
+    glm::vec4 frontTL2_6(frontTL_xz_6.x, top2_6, frontTL_xz_6.y, 1.0f);
+    glm::vec4 frontTR2_6(frontTR_xz_6.x, top2_6, frontTR_xz_6.y, 1.0f);
+    glm::vec4 frontBR2_6(frontBR_xz_6.x, bottom2_6, frontBR_xz_6.y, 1.0f);
+    glm::vec4 frontBL2_6(frontBL_xz_6.x, bottom2_6, frontBL_xz_6.y, 1.0f);
+
+    Square<4> frontFace2_6(frontTL2_6, frontTR2_6, frontBR2_6, frontBL2_6);
+
+    // Back face
+    glm::vec4 backTL2_6(backTL_xz_6.x, top2_6, backTL_xz_6.y, 1.0f);
+    glm::vec4 backTR2_6(backTR_xz_6.x, top2_6, backTR_xz_6.y, 1.0f);
+    glm::vec4 backBR2_6(backBR_xz_6.x, bottom2_6, backBR_xz_6.y, 1.0f);
+    glm::vec4 backBL2_6(backBL_xz_6.x, bottom2_6, backBL_xz_6.y, 1.0f);
+
+    Square<4> backFace2_6(backTL2_6, backTR2_6, backBR2_6, backBL2_6);
+
+    // Create second prism
+    Cube<4> *rectangularPrism2_6 = new Cube<4>(frontFace2_6, backFace2_6);
+    rectangularPrism2_6->setColour(9, 139, 74); // Green
+    hole_6->addShape(rectangularPrism2_6);
+
+    // Green sphere
+    glm::vec4 sphereCenter_6(1.5f, -0.7f, 0.2f, 1.0f); // xyz
+
+    float sphereRadius_6 = 0.35f;
+    int sphereStacks_6 = 24;
+    int sphereSlices_6 = 32;
+
+    Sphere<4> *greenSphere_6 = new Sphere<4>(
+        sphereCenter_6,
+        sphereRadius_6,
+        sphereStacks_6,
+        sphereSlices_6);
+
+    greenSphere_6->setColour(9, 139, 74); // Green
+    hole_6->addShape(greenSphere_6);
+
+    // Hole 6 barriers around the ends of the green rectangles
+    // Barrier colour: (235, 183, 93)
+
+    float barrierHalfWidth_6 = 0.12f; // Barrier thickness along X
+    float barrierHalfHeight_6 = halfHeight_6 * 1.4f;
+    float barrierDepth_6 = depth_6;
+    float barrierY_6 = centreY_6;
+
+    // ---------------------------------------------------------
+    // Barrier for LEFT end of first green prism
+    // ---------------------------------------------------------
+
+    float leftBarrierX_6 = -halfWidth_6 - barrierHalfWidth_6;
+
+    glm::vec4 leftBarrierFrontTL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontTR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontBR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6, 1.0f);
+    glm::vec4 leftBarrierFrontBL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6, 1.0f);
+
+    Square<4> leftBarrierFront_6(
+        leftBarrierFrontTL_6,
+        leftBarrierFrontTR_6,
+        leftBarrierFrontBR_6,
+        leftBarrierFrontBL_6);
+
+    glm::vec4 leftBarrierBackTL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackTR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 + barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackBR_6(leftBarrierX_6 + barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+    glm::vec4 leftBarrierBackBL_6(leftBarrierX_6 - barrierHalfWidth_6, barrierY_6 - barrierHalfHeight_6, centreZ_6 + barrierDepth_6, 1.0f);
+
+    Square<4> leftBarrierBack_6(
+        leftBarrierBackTL_6,
+        leftBarrierBackTR_6,
+        leftBarrierBackBR_6,
+        leftBarrierBackBL_6);
+
+    Cube<4> *leftBarrier_6 = new Cube<4>(leftBarrierFront_6, leftBarrierBack_6);
+    leftBarrier_6->setColour(235, 183, 93);
+    hole_6->addShape(leftBarrier_6);
+
+    // Black cylinder
+    glm::vec4 cylinderCenter_6(-0.9f, -0.73f, 1.0f, 1.0f);
+
+    float cylinderRadius_6 = 0.25f;
+    float cylinderHeight_6 = 0.4f;
+    int cylinderResolution_6 = 32;
+
+    // axis:
+    // 0 = along X
+    // 1 = along Y
+    // 2 = along Z
+    int cylinderAxis_6 = 1;
+
+    Cylinder<4> *blackCylinder_6 = new Cylinder<4>(
+        cylinderCenter_6,
+        cylinderRadius_6,
+        cylinderHeight_6,
+        cylinderResolution_6,
+        cylinderAxis_6);
+
+    // blackCylinder_6->setColour(0, 0, 0); // Black
+    // hole_6->addShape(blackCylinder_6);
+    scene.addObject(hole_6);
+    /*************************************************** */
 
     scene.createGLBuffers();
     std::cout << "Hole 8 geometry loaded. Program initialised successfully." << std::endl;

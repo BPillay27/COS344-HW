@@ -14,11 +14,15 @@ endif()
 
 project ("HomwWorkAssignment")
 
-file(COPY 
-    "vertexShader.glsl" 
+file(COPY
+    "vertexShader.glsl"
     "fragmentShader.glsl"
-    "Models/Hole_1_Dog.glb"
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+file(COPY
+    "Models/Hole_1_Dog.glb"
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Models
 )
 
 
