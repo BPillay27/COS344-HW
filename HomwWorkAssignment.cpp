@@ -33,12 +33,9 @@ using namespace std;
 #include "RenderState.h"
 #include "SpatialHash.h"
 
-// Global spatial hash for efficient object queries
-// Cell size 2.5f creates 8x8 = 64 cells (quadrants with 4 subdivisions each)
+// Global variables
 SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
-//bool gUseGrayscale = false ; <- Was not needed
-
 
 #if defined(__has_include)
 #  if __has_include("stb_image.h")
@@ -88,196 +85,173 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             break;
         case GLFW_KEY_I:
             if (action == GLFW_PRESS) {
-                gUseGrayscale = !gUseGrayscale;  // Toggle grayscale filter
+                gUseGrayscale = !gUseGrayscale;  
             }
             break;
     }
-
 }
 
-
-const char *getError()
-{
+const char *getError() {
     const char *errorDescription;
     glfwGetError(&errorDescription);
     return errorDescription;
 }
 
-inline void startUpGLFW()
-{
-    glewExperimental = true; // Needed for core profile
-    if (!glfwInit())
-    {
-        throw getError();
-    }
+inline void startUpGLFW() {
+    glewExperimental = true; 
+    if (!glfwInit()) throw getError();
 }
 
-inline void startUpGLEW()
-{
-    glewExperimental = true; // Needed in core profile
-    if (glewInit() != GLEW_OK)
-    {
+inline void startUpGLEW() {
+    glewExperimental = true; 
+    if (glewInit() != GLEW_OK) {
         glfwTerminate();
         throw getError();
     }
 }
 
-inline GLFWwindow *setUp()
-{
+inline GLFWwindow *setUp() {
     startUpGLFW();
-    glfwWindowHint(GLFW_SAMPLES, 4);               // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
+    glfwWindowHint(GLFW_SAMPLES, 4);               
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // To make MacOS happy; should not be needed
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL
-    GLFWwindow *window;                                            // (In the accompanying source code, this variable is global for simplicity)
-    window = glfwCreateWindow(1000, 1000, "Experiment", NULL, NULL);
-    if (window == NULL)
-    {
-        cout << getError() << endl;
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+    GLFWwindow *window = glfwCreateWindow(1000, 1000, "Experiment", NULL, NULL);
+    if (window == NULL) {
         glfwTerminate();
-        throw "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n";
+        throw "Failed to open GLFW window.\n";
     }
-    glfwMakeContextCurrent(window); // Initialize GLEW
+    glfwMakeContextCurrent(window); 
     startUpGLEW();
     return window;
 }
 
-
-
-
 void renderObjects(GLuint programID, glm::mat4 view) {
-    // Render skybox (rotation only, no translation)
     glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
     glUniformMatrix4fv(glGetUniformLocation(programID, "uView"), 1, GL_FALSE, glm::value_ptr(skyboxView));
     glDepthMask(GL_FALSE); 
     
     // TODO: Render skybox here
-    // <- add skybox render and uncomment
     
-    glDepthMask(GL_TRUE);   // Re-enable depth writing so no sky box does no interfere with the other renders
-    
+    glDepthMask(GL_TRUE);   
     glUniformMatrix4fv(glGetUniformLocation(programID, "uView"), 1, GL_FALSE, glm::value_ptr(view));
-    
-    // Render other objects
-    // TODO: Add your object rendering here
     scene.draw();
 }
 
-int main()
-{
+int main() {
     GLFWwindow *window;
-    try
-    {
-        window = setUp();
-    }
-    catch (const char *e)
-    {
-        cout << e << endl;
-        throw;
-    }
-
-    //Add code here
+    try { window = setUp(); }
+    catch (const char *e) { cout << e << endl; throw; }
 
     GLuint programID = LoadShaders("vertexShader.glsl", "fragmentShader.glsl");
     if (programID == 0) { std::cerr << "Failed to load shaders" << std::endl; glfwTerminate(); return 1; }
    
-    // Register key callback
     glfwSetKeyCallback(window, keyCallback);
     
-	GLint locNM = glGetUniformLocation(programID, "uNormalMatrix");
-    GLint locMVP = glGetUniformLocation(programID, "uMVP");
+    GLint locNM = glGetUniformLocation(programID, "uNormalMatrix");
     GLint locView = glGetUniformLocation(programID, "uView");
     GLint locModel = glGetUniformLocation(programID, "uModel");
     GLint locProjection = glGetUniformLocation(programID, "uProjection");
     
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     
-    // Set up perspective projection
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
-    glm::mat4 orthogonalProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
+    glm::mat4 orthogonalProjection = glm::ortho(-8.0f, 8.0f, -8.0f, 8.0f, 0.1f, 100.0f); // Expanded size slightly
+    
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 7.0f);
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::mat4 model = glm::mat4(1.0f);
     
     glUseProgram(programID);
-    glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
     
-    float cameraSpeed = 0.1f;
+    // ===== INITIALIZE LIGHTING UNIFORMS TO PREVENT SHADER REJECTION (CRITICAL) =====
+    glUniform3f(glGetUniformLocation(programID, "uLightDir"), 0.5f, 1.0f, 0.4f);
+    glUniform3f(glGetUniformLocation(programID, "uLightColor"), 1.0f, 1.0f, 1.0f);
+    glUniform1f(glGetUniformLocation(programID, "uLightIntensity"), 0.8f);
+    
+    glUniform3f(glGetUniformLocation(programID, "uPointLightPos"), 0.0f, 4.0f, -1.5f);
+    glUniform3f(glGetUniformLocation(programID, "uPointLightColor"), 1.0f, 0.9f, 0.8f);
+    glUniform1f(glGetUniformLocation(programID, "uPointLightIntensity"), 1.0f);
+    glUniform1f(glGetUniformLocation(programID, "uPointLightRange"), 25.0f);
+    glUniform1f(glGetUniformLocation(programID, "uShininess"), 32.0f);
 
-	// Initialize spatial hash with 2.5f cell size (creates 8x8 grid with 4 subdivisions per quadrant)
+    // Explicitly toggle features off since textures aren't being loaded yet
+    glUniform1i(glGetUniformLocation(programID, "useColor"), 0);
+    glUniform1i(glGetUniformLocation(programID, "useAlphaMap"), 0);
+    glUniform1i(glGetUniformLocation(programID, "useDisplacement"), 0);
+    
+    float cameraSpeed = 0.07f;
     gSpatialHash = new SpatialHash(2.5f);
     
-    // TODO: Add your objects here and insert them into the spatial hash
+    // Add red prism shape
     glm::vec4 frontCenter(0.0f, 0.0f, 0.0f, 1.0f);
     Square<4> frontFace(frontCenter, 2.0f, 5.0f);
-    frontFace.setColour(255, 0, 0, 1.0f);
+    frontFace.setColour(255, 50, 50, 1.0f); // Enabled safe 0-255 scale coloring
 
     glm::vec4 backCenter(0.0f, 0.0f, -3.0f, 1.0f);
     Square<4> backFace(backCenter, 2.0f, 5.0f);
+    backFace.setColour(255, 50, 50, 1.0f);
+    
     Cube<4>* rectangularPrism = new Cube<4>(frontFace, backFace);
     scene.addShape(rectangularPrism);
     
     int prismID = scene.getNumShapes() - 1;
-
-    glm::vec3 hashPosition(
-        (frontCenter.x + backCenter.x) / 2.0f,
-        (frontCenter.y + backCenter.y) / 2.0f,
-        (frontCenter.z + backCenter.z) / 2.0f
-    );
-
-    if (gSpatialHash != nullptr) {
-        gSpatialHash->insert(prismID, hashPosition);
-    }
+    glm::vec3 hashPosition((frontCenter.x + backCenter.x) / 2.0f, (frontCenter.y + backCenter.y) / 2.0f, (frontCenter.z + backCenter.z) / 2.0f);
+    if (gSpatialHash != nullptr) gSpatialHash->insert(prismID, hashPosition);
 
     scene.createGLBuffers();
     
     do {
-        // Handle camera movement using key listener
-        if (keyState.W) cameraPos += cameraSpeed * glm::normalize(cameraTarget - cameraPos);
-        if (keyState.S) cameraPos -= cameraSpeed * glm::normalize(cameraTarget - cameraPos);
-        if (keyState.A) cameraPos -= cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
-        if (keyState.D) cameraPos += cameraSpeed * glm::normalize(glm::cross(cameraTarget - cameraPos, upVector));
+        glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
+
+        // ===== SMOOTH FIRST-PERSON WASD FLIGHT CONTROLS =====
+        glm::vec3 forwardDir = glm::normalize(cameraTarget - cameraPos);
+        glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, upVector));
+        
+        if (keyState.W) { cameraPos += cameraSpeed * forwardDir; cameraTarget += cameraSpeed * forwardDir; }
+        if (keyState.S) { cameraPos -= cameraSpeed * forwardDir; cameraTarget -= cameraSpeed * forwardDir; }
+        if (keyState.A) { cameraPos -= cameraSpeed * rightDir;   cameraTarget -= cameraSpeed * rightDir; }
+        if (keyState.D) { cameraPos += cameraSpeed * rightDir;   cameraTarget += cameraSpeed * rightDir; }
         
         glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, upVector);
         
+        // Feed the active camera position to vertex shader for specular calculations
+        glUniform3f(glGetUniformLocation(programID, "uCameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+        
+        // ==================== 1. Render Main View ====================
+        glViewport(0, 0, 1000, 1000); 
+        glClearColor(0.0f, 0.0f, 0.4f, 1.0f); // Main View: Deep Blue
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         GLint grayscaleLoc = glGetUniformLocation(programID, "useGrayscale");
         if (grayscaleLoc != -1) glUniform1i(grayscaleLoc, gUseGrayscale ? 1 : 0);
 
-        // Upload Model and Normal Matrix data for the shaders
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(view * model)));
         glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-        
-        // ==================== 1. Render Main View FIRST ====================
-        glViewport(0, 0, 1000, 1000); // CRITICAL: Reset the drawing area to full screen!
         glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(view));
+        
         renderObjects(programID, view);
         
-       // ==================== 2. Render Mini-Map ====================
+        // ==================== 2. Render Mini-Map ====================
         glEnable(GL_SCISSOR_TEST);
         glScissor(750, 0, 250, 250);  
         glViewport(750, 0, 250, 250); 
-        glClear(GL_DEPTH_BUFFER_BIT);
+        
+        // Clear the mini-map viewport to a unique background color (Dark Slate)
+        glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
         
         glUniformMatrix4fv(locProjection, 1, GL_FALSE, glm::value_ptr(orthogonalProjection));
         
-        // Track the main camera's X and Z position, but hover high up at Y=10
-        glm::vec3 miniMapPos = glm::vec3(cameraPos.x, 10.0f, cameraPos.z);
+        // Track player view position dynamically from overhead (Top-down view)
+        glm::vec3 miniMapPos = glm::vec3(cameraPos.x, 15.0f, cameraPos.z);
         glm::vec3 miniMapTarget = glm::vec3(cameraPos.x, 0.0f, cameraPos.z); 
-
-        glm::mat4 miniMapView = glm::lookAt(
-            miniMapPos,      // Hover above the player
-            miniMapTarget,   // Look straight down at the player
-            glm::vec3(0.0f, 0.0f, -1.0f)   // Keep the "Up" orientation aligned
-        );
+        glm::mat4 miniMapView = glm::lookAt(miniMapPos, miniMapTarget, glm::vec3(0.0f, 0.0f, -1.0f));
         
-        // Recalculate Normal Matrix for Mini-Map angle
         glm::mat3 miniMapNormal = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
         glUniformMatrix3fv(locNM, 1, GL_FALSE, glm::value_ptr(miniMapNormal));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(miniMapView));
@@ -291,13 +265,7 @@ int main()
         
     } while (!glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS);
 
-
-    // Clean up spatial hash
-    if (gSpatialHash) {
-        delete gSpatialHash;
-        gSpatialHash = nullptr;
-    }
-    
+    if (gSpatialHash) delete gSpatialHash;
     glDeleteProgram(programID);
     glfwDestroyWindow(window);
     glfwTerminate();
