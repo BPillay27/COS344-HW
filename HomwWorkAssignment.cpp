@@ -312,29 +312,59 @@ int main() {
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
-    buildHole11(scene, glm::vec3(40.0f, 0.0f, -10.0f)); // Placed to the right of Hole 9
+    buildHole11(scene, glm::vec3(30.0f, 0.0f, 35.0f), true);
     buildHole13(scene, glm::vec3(0.0f, 0.0f, -6.0f)); // Keep Hole 13 centered and visible
     buildHole4(scene, glm::vec3(-20.0f, 0.0f, -10.0f)); // Placed to the left of Hole 9
 
     // -------------------------------------------------------
     // Course-wide ground floor -- Red-Brown brick (232, 110, 66).
-    // One flat slab that fills the entire course footprint so
-    // the gaps between holes read as a continuous brick pathway.
-    //
-    // World extents covered:
-    //   X : -27.5 to +47.5  (centre 10, width  75)
-    //   Z : -30   to +30    (centre  0, depth  60)
-    //   Y : top face at 0, slab 0.2 thick (centre at -0.1)
+    // Built out of separate cubes to drop down around Hole 11.
     // -------------------------------------------------------
-    {
-        Cube<4>* courseFloor = new Cube<4>(
-            glm::vec4(10.0f, -0.1f, 0.0f, 1.0f),
-            0.2f,   // height -- slab thickness; top face sits at Y=0
-            75.0f,  // width  -- spans X = -27.5 to +47.5
-            60.0f   // depth  -- spans Z = -30 to +30
-        );
-        courseFloor->setColour(232, 110, 66);
-        scene.addShape(courseFloor);
+    auto addFloor = [&](float xStart, float xEnd, float zStart, float zEnd, float yTop) {
+        float width = xEnd - xStart;
+        float depth = zEnd - zStart;
+        float cX = xStart + width * 0.5f;
+        float cZ = zStart + depth * 0.5f;
+        float yBottom = -2.0f; // Extend the floor downwards to prevent any gaps between drops
+        float thickness = yTop - yBottom;
+        float cY = yTop - thickness * 0.5f;
+        Cube<4>* f = new Cube<4>(glm::vec4(cX, cY, cZ, 1.0f), thickness, width, depth);
+        f->setColour(232, 110, 66);
+        scene.addShape(f);
+    };
+
+    // Main floor (Z: -30 to 35) stays at Y = 0
+    addFloor(-27.5f, 47.5f, -30.0f, 35.0f, 0.0f);
+
+    // Floor around Hole 11's upper flat (Z: 35 to 38)
+    // Left and right of the hole
+    addFloor(-27.5f, 28.0f, 35.0f, 38.0f, 0.0f);
+    addFloor(32.0f, 47.5f, 35.0f, 38.0f, 0.0f);
+
+    // Floor around Hole 11's middle flat (Z: 38 to 44)
+    // Top drops to -0.3 to sit just below Hole 11's walls
+    addFloor(-27.5f, 28.0f, 38.0f, 44.0f, -0.3f);
+    addFloor(32.0f, 47.5f, 38.0f, 44.0f, -0.3f);
+
+    // Ramp down for the floor matching Hole 11's ramp (Z: 44 to 46) out of separate cubes
+    for (int i=0; i<4; ++i) {
+        float zS = 44.0f + i * 0.5f;
+        float zE = zS + 0.5f;
+        float yT = -0.3f - i * 0.075f; 
+        addFloor(-27.5f, 28.0f, zS, zE, yT);
+        addFloor(32.0f, 47.5f, zS, zE, yT);
+    }
+
+    // Floor around Hole 11's lower pitfall (Z: 46 to 50)
+    addFloor(-27.5f, 28.0f, 46.0f, 50.0f, -0.6f);
+    addFloor(32.0f, 47.5f, 46.0f, 50.0f, -0.6f);
+
+    // Ramp down going from hole 11 (Z: 50 to 60) covering the full width
+    for (int i=0; i<10; ++i) {
+        float zS = 50.0f + i * 1.0f;
+        float zE = zS + 1.0f;
+        float yT = -0.6f - i * 0.1f;
+        addFloor(-27.5f, 47.5f, zS, zE, yT);
     }
 
     // Coarse collision volumes for the visible course walls and major blockers.

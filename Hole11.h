@@ -11,4 +11,6 @@
 #include <glm/glm.hpp>
 #include "Figure.h"  // or whatever your scene container header is called
 
-void buildHole11(Figure& scene, glm::vec3 worldOffset);
+// rot180: when true the whole hole is rotated 180 degrees around the Y axis
+//         (negates local X and Z before applying worldOffset).
+void buildHole11(Figure& scene, glm::vec3 worldOffset, bool rot180 = false);

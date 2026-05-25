@@ -6,25 +6,27 @@
 #include <glm/glm.hpp>
 #include "Figure.h"
 
-glm::vec4 h11pt(float x, float y, float z, glm::vec3 o);
+// rot: when true, local X and Z are negated before the offset is applied,
+//      producing a 180-degree rotation around the Y axis.
+glm::vec4 h11pt(float x, float y, float z, glm::vec3 o, bool rot = false);
 
 void h11FlatTurf(Figure& scene, float cx, float cy, float cz,
-                 float width, float depth, glm::vec3 o);
+                 float width, float depth, glm::vec3 o, bool rot = false);
 
 void h11SlopeTurf(Figure& scene,
                   float fx, float fy, float fz,
                   float bx, float by, float bz,
-                  float width, glm::vec3 o);
+                  float width, glm::vec3 o, bool rot = false);
 
 void h11Wall(Figure& scene,
              float cx, float cy, float cz,
-             float h, float w, float d, glm::vec3 o);
+             float h, float w, float d, glm::vec3 o, bool rot = false);
 
 void h11Concrete(Figure& scene,
                  float cx, float cy, float cz,
-                 float h, float w, float d, glm::vec3 o);
+                 float h, float w, float d, glm::vec3 o, bool rot = false);
 
 void h11VArm(Figure& scene,
              float tipX, float tipZ,
              float baseX, float baseZ,
-             float surfaceY, glm::vec3 o);
+             float surfaceY, glm::vec3 o, bool rot = false);
