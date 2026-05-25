@@ -37,6 +37,7 @@ using namespace std;
 #include "Hole8.h"
 #include "Hole9.h"
 #include "Hole10.h"
+#include "Hole11.h"
 #include "Camera.h"
 
 
@@ -241,7 +242,7 @@ int main() {
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
-
+    buildHole11(scene, glm::vec3(40.0f, 0.0f, -10.0f)); // Placed to the right of Hole 9
     /*
     ====================================
     Course One 
