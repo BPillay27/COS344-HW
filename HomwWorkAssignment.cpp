@@ -35,6 +35,7 @@ using namespace std;
 #include "RenderState.h"
 #include "SpatialHash.h"
 #include "Drone.h"
+#include "Hole7.h"
 #include "Hole8.h"
 #include "Hole9.h"
 #include "Hole10.h"
@@ -309,6 +310,12 @@ int main() {
     gDrone->createGLBuffers();
 
     // Build Hole geometry and register it in the global scene.
+    Figure* hole7 = new Figure();
+    buildHole7(*hole7, glm::vec3(-15.5f, 0.0f, 10.0f)); 
+    hole7->rotateY(-90);
+    hole7->move(12.0f, 1.5f, 25.0f);
+    scene.addObject(hole7);
+
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
@@ -334,16 +341,16 @@ int main() {
     };
 
     // Main floor (Z: -30 to 35) stays at Y = 0
-    addFloor(-27.5f, 47.5f, -30.0f, 35.0f, 0.0f);
+    addFloor(-40.0f, 47.5f, -30.0f, 35.0f, 0.0f);
 
     // Floor around Hole 11's upper flat (Z: 35 to 38)
     // Left and right of the hole
-    addFloor(-27.5f, 28.0f, 35.0f, 38.0f, 0.0f);
+    addFloor(-40.0f, 28.0f, 35.0f, 38.0f, 0.0f);
     addFloor(32.0f, 47.5f, 35.0f, 38.0f, 0.0f);
 
     // Floor around Hole 11's middle flat (Z: 38 to 44)
     // Top drops to -0.3 to sit just below Hole 11's walls
-    addFloor(-27.5f, 28.0f, 38.0f, 44.0f, -0.3f);
+    addFloor(-40.0f, 28.0f, 38.0f, 44.0f, -0.3f);
     addFloor(32.0f, 47.5f, 38.0f, 44.0f, -0.3f);
 
     // Ramp down for the floor matching Hole 11's ramp (Z: 44 to 46) out of separate cubes
@@ -351,12 +358,12 @@ int main() {
         float zS = 44.0f + i * 0.5f;
         float zE = zS + 0.5f;
         float yT = -0.3f - i * 0.075f; 
-        addFloor(-27.5f, 28.0f, zS, zE, yT);
+        addFloor(-40.0f, 28.0f, zS, zE, yT);
         addFloor(32.0f, 47.5f, zS, zE, yT);
     }
 
     // Floor around Hole 11's lower pitfall (Z: 46 to 50)
-    addFloor(-27.5f, 28.0f, 46.0f, 50.0f, -0.6f);
+    addFloor(-40.0f, 28.0f, 46.0f, 50.0f, -0.6f);
     addFloor(32.0f, 47.5f, 46.0f, 50.0f, -0.6f);
 
     // Ramp down going from hole 11 (Z: 50 to 60) covering the full width
@@ -364,7 +371,7 @@ int main() {
         float zS = 50.0f + i * 1.0f;
         float zE = zS + 1.0f;
         float yT = -0.6f - i * 0.1f;
-        addFloor(-27.5f, 47.5f, zS, zE, yT);
+        addFloor(-40.0f, 47.5f, zS, zE, yT);
     }
 
     // Coarse collision volumes for the visible course walls and major blockers.
@@ -606,9 +613,11 @@ int main() {
     holeFigure_1->addObject(turf_1);
     holeFigure_1->addObject(dogFigure);
     holeFigure_1->addObject(walls_1);
+    holeFigure_1->rotateY(90);// Rotate around Y-axis to face the correct direction
 
-    holeFigure_1->move(-0.25f, 0.750f, 0.0f); // Adjust position to align with the turf and walls
-    // TO MOVE HOLE ONE 
+    //move hole to be next to hole 3
+    holeFigure_1->move(-30.0f, 0.750f, 5.0f); // Adjust position to align with the turf and walls
+
 
     scene.addObject(holeFigure_1);
 
@@ -625,13 +634,13 @@ int main() {
     float halfWidth_3 = 3.1f;
     float halfHeight_3 = 0.20f;
 
-    // Move Hole 3 significantly to the right
-    float centreX_3 = 9.0f;
+    // Move Hole 3 significantly to the left (by building at origin, rotating, then moving)
+    float centreX_3 = 0.0f;
 
     // Raised so prism bottom (centreY_3 - halfHeight_3) sits at Y=0, above the floor.
     float centreY_3 = halfHeight_3;
 
-    float centreZ_3 = -0.1f;
+    float centreZ_3 = 0.0f;
     float depth_3 = 5.0f;
 
     // Front face
@@ -802,6 +811,10 @@ int main() {
 
     blackCylinder_3->setColour(67, 0, 0); // Black
     hole_3->addShape(blackCylinder_3);
+
+    // Rotate by 90 degrees to the right, then move it to the left
+   
+    hole_3->move(-30.0f, 0.0f, -5.0f);
 
     scene.addObject(hole_3);
 
@@ -979,6 +992,10 @@ int main() {
 
     // blackCylinder_6->setColour(0, 0, 0); // Black
     // hole_6->addShape(blackCylinder_6);
+
+    hole_6->rotateY(90); // Rotate 90 degrees to the left
+    hole_6->move(-15.0f, 0.0f, 0.0f); // Move to the right of Hole 8
+
     scene.addObject(hole_6);
     /*************************************************** */
 
