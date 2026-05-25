@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
+#include <functional>
 
 #include "Figure.h"
 #include "Camera.h"
@@ -24,6 +25,8 @@ struct AABB {
 // World state: worldPosition + yaw/pitch/roll (degrees).
 class Drone {
 public:
+    using CollisionTest = std::function<bool(const AABB&)>;
+
     Drone();
 
     // Translation in drone-local directions.
@@ -35,6 +38,8 @@ public:
     void addYaw(float degrees);
     void addPitch(float degrees);
     void addRoll(float degrees);
+
+    void setCollisionTest(CollisionTest test);
 
     // Call once per frame. Spins propellers, updates the attached camera.
     void update(float deltaTime);
@@ -64,6 +69,7 @@ private:
     Camera camera;
 
     static const float PROP_SPEED_DEG_PER_SEC;
+    CollisionTest collisionTest;
 
     void assembleParts();
     void updateCamera();
@@ -71,6 +77,9 @@ private:
     glm::vec3 getForward() const;
     glm::vec3 getRight() const;
     glm::vec3 getUp() const;
+    bool tryMove(const glm::vec3& delta);
+    bool canOccupy(const glm::vec3& candidatePosition) const;
+    AABB getAABBAt(const glm::vec3& position) const;
 
     static void setMVP(GLuint shaderID, const glm::mat4& mvp);
     static glm::mat4 spinAroundPoint(const glm::vec3& centre, float angleDeg);

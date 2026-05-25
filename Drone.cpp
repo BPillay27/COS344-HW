@@ -3,13 +3,15 @@
 #include "Shapes/Cylinder.h"
 #include "Shapes/Sphere.h"
 #include <cmath>
+#include <utility>
 
 const float Drone::PROP_SPEED_DEG_PER_SEC = 720.0f;
 
 Drone::Drone()
     : worldPosition(0.0f, 0.5f, 3.0f),
       yaw(0.0f), pitch(0.0f), roll(0.0f),
-      propAngle(0.0f)
+    propAngle(0.0f),
+    collisionTest(nullptr)
 {
     propDirs[0] =  1;  // FL: counter-clockwise
     propDirs[1] = -1;  // FR: clockwise
@@ -192,6 +194,10 @@ void Drone::createGLBuffers() {
         props[i].createGLBuffers();
 }
 
+void Drone::setCollisionTest(CollisionTest test) {
+    collisionTest = std::move(test);
+}
+
 // ---------------------------------------------------------------------------
 // Per-frame update
 // ---------------------------------------------------------------------------
@@ -246,7 +252,7 @@ void Drone::moveForward(float delta) {
     fwd.y = 0.0f;
     float len = glm::length(fwd);
     if (len > 0.001f) fwd /= len;   // re-normalise after zeroing Y
-    worldPosition += fwd * delta;
+    tryMove(fwd * delta);
 }
 
 // A/D: horizontal strafe, also ignoring roll so it stays in the XZ plane.
@@ -255,18 +261,19 @@ void Drone::moveRight(float delta) {
     right.y = 0.0f;
     float len = glm::length(right);
     if (len > 0.001f) right /= len;
-    worldPosition += right * delta;
+    tryMove(right * delta);
 }
 
 // Space/Shift: pure world-Y movement, completely independent of orientation.
 void Drone::moveUp(float delta) {
-    worldPosition.y += delta;
+    tryMove(glm::vec3(0.0f, delta, 0.0f));
 }
 
 void Drone::addYaw(float degrees) {
     yaw += degrees;
     if (yaw >  360.0f) yaw -= 360.0f;
     if (yaw < -360.0f) yaw += 360.0f;
+    updateCamera();
 }
 
 void Drone::addPitch(float degrees) {
@@ -274,12 +281,14 @@ void Drone::addPitch(float degrees) {
     // Clamp to avoid gimbal lock at extreme angles.
     if (pitch >  85.0f) pitch =  85.0f;
     if (pitch < -85.0f) pitch = -85.0f;
+    updateCamera();
 }
 
 void Drone::addRoll(float degrees) {
     roll += degrees;
     if (roll >  360.0f) roll -= 360.0f;
     if (roll < -360.0f) roll += 360.0f;
+    updateCamera();
 }
 
 // ---------------------------------------------------------------------------
@@ -308,6 +317,28 @@ glm::vec3 Drone::getRight() const {
 glm::vec3 Drone::getUp() const {
     glm::mat4 m = buildModelMatrix();
     return glm::normalize(glm::vec3(m * glm::vec4(0, 1, 0, 0)));
+}
+
+AABB Drone::getAABBAt(const glm::vec3& position) const {
+    const glm::vec3 half(0.40f, 0.20f, 0.40f);
+    return { position - half, position + half };
+}
+
+bool Drone::canOccupy(const glm::vec3& candidatePosition) const {
+    if (!collisionTest) {
+        return true;
+    }
+    return collisionTest(getAABBAt(candidatePosition));
+}
+
+bool Drone::tryMove(const glm::vec3& delta) {
+    glm::vec3 candidatePosition = worldPosition + delta;
+    if (!canOccupy(candidatePosition)) {
+        return false;
+    }
+    worldPosition = candidatePosition;
+    updateCamera();
+    return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,6 +379,5 @@ glm::vec3 Drone::getPosition() const {
 AABB Drone::getAABB() const {
     // Axis-aligned bounding box in world space (approximate, ignores rotation).
     // Wingspan ~0.75 m, height ~0.30 m (including landing gear).
-    const glm::vec3 half(0.40f, 0.20f, 0.40f);
-    return { worldPosition - half, worldPosition + half };
+    return getAABBAt(worldPosition);
 }
