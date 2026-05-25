@@ -5,6 +5,7 @@
 #include <thread>
 #include <random>
 #include <chrono> 
+#include <algorithm>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -37,6 +38,8 @@ using namespace std;
 #include "Hole8.h"
 #include "Hole9.h"
 #include "Hole10.h"
+#include "Hole13.h"
+#include "Hole4.h"
 #include "Camera.h"
 
 
@@ -86,6 +89,13 @@ void cursor_callback(GLFWwindow* /*window*/, double xpos, double ypos) {
 
 bool wireframeMode = false;
 
+directionalLight gSunLight(
+    glm::vec4(-0.5f, 1.0f, 0.25f, 0.0f),
+    glm::vec4(1.0f, 0.98f, 0.9f, 1.0f),
+    0.9f);
+float gSunAngle = -0.9f;
+float gTimeScale = 0.45f;
+
 struct KeyState {
     bool W = false;
     bool A = false;
@@ -113,6 +123,18 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         case GLFW_KEY_ENTER:
             if (action == GLFW_PRESS) {
                 wireframeMode = !wireframeMode;
+            }
+            break;
+        case GLFW_KEY_LEFT_BRACKET:
+            if (action == GLFW_PRESS) {
+                gTimeScale = std::min(gTimeScale * 1.25f, 5.0f);
+                std::cout << "Time scale increased to " << gTimeScale << std::endl;
+            }
+            break;
+        case GLFW_KEY_RIGHT_BRACKET:
+            if (action == GLFW_PRESS) {
+                gTimeScale = std::max(gTimeScale / 1.25f, 0.05f);
+                std::cout << "Time scale decreased to " << gTimeScale << std::endl;
             }
             break;
         case GLFW_KEY_I:
@@ -222,6 +244,7 @@ int main() {
     glUniform1f(glGetUniformLocation(programID, "uPointLightIntensity"), 1.0f);
     glUniform1f(glGetUniformLocation(programID, "uPointLightRange"), 25.0f);
     glUniform1f(glGetUniformLocation(programID, "uShininess"), 32.0f);
+    std::cout << "Sun controls: '[' speeds time up, ']' slows it down." << std::endl;
 
     // Explicitly toggle features off since textures aren't being loaded yet
     glUniform1i(glGetUniformLocation(programID, "useColor"), 0);
@@ -241,7 +264,8 @@ int main() {
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
-
+    buildHole13(scene, glm::vec3(0.0f, 0.0f, -6.0f)); // Keep Hole 13 centered and visible
+    buildHole4(scene, glm::vec3(-20.0f, 0.0f, -10.0f)); // Placed to the left of Hole 9
     /*
     ====================================
     Course One 
@@ -379,7 +403,7 @@ int main() {
     const float holeExtra = 0.002f; // 0.001 above and 0.001 below turf
     const float holeScaleFactor_1 = 3.0f;
     const float holeHeight_1 = (turfHeight_1 + holeExtra) * holeScaleFactor_1;
-    const float holeRadius_1 = 0.06f * holeScaleFactor_1;
+    const float holeRadius_1 = 0.30f;
     const float holeCenterX_1 = 0.5f;
     // Move hole to turf centre (not in the front wall)
     // Place hole under the horizontal "dump" cylinder at the midpoint between its two previous Z placements
@@ -839,6 +863,12 @@ int main() {
         lastTime = currentTime;
         if (dt > 0.1f) dt = 0.1f; // clamp to avoid jumps after stalls
 
+        gSunAngle += gTimeScale * 0.35f * dt;
+        glm::vec3 sunDir = glm::normalize(glm::vec3(
+            cosf(gSunAngle),
+            sinf(gSunAngle),
+            0.35f));
+        gSunLight.setDirection(glm::vec4(sunDir, 0.0f));
         if (gDrone) gDrone->update(dt);
 
         // ===== DRONE FLIGHT CONTROLS =====
@@ -871,6 +901,10 @@ int main() {
 
         // Camera position for specular lighting in the vertex shader.
         glUniform3f(glGetUniformLocation(programID, "uCameraPos"), camPos.x, camPos.y, camPos.z);
+        glUniform3f(glGetUniformLocation(programID, "uLightDir"), sunDir.x, sunDir.y, sunDir.z);
+        glm::vec4 sunColor = gSunLight.getColor();
+        glUniform3f(glGetUniformLocation(programID, "uLightColor"), sunColor.x, sunColor.y, sunColor.z);
+        glUniform1f(glGetUniformLocation(programID, "uLightIntensity"), gSunLight.getIntensity());
 
         // ==================== 1. Render Main View ====================
         glViewport(0, 0, 1000, 1000);

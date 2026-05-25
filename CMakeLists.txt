@@ -63,9 +63,11 @@ set(COMMON_SOURCES
     "SpatialHash.cpp"
     "LayoutReader.cpp"
     "Shapes/light.cpp"
-    "Hole8.cpp"   # <-- ADD THESE
-    "Hole9.cpp"   # <-- ADD THESE
+    "Hole8.cpp"   
+    "Hole9.cpp"   
     "Hole10.cpp"
+    "Hole13.cpp"
+    "Hole4.cpp"
 )
 
 # Create single executable from HomwWorkAssignment.cpp
