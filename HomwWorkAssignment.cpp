@@ -316,6 +316,27 @@ int main() {
     buildHole13(scene, glm::vec3(0.0f, 0.0f, -6.0f)); // Keep Hole 13 centered and visible
     buildHole4(scene, glm::vec3(-20.0f, 0.0f, -10.0f)); // Placed to the left of Hole 9
 
+    // -------------------------------------------------------
+    // Course-wide ground floor -- Red-Brown brick (232, 110, 66).
+    // One flat slab that fills the entire course footprint so
+    // the gaps between holes read as a continuous brick pathway.
+    //
+    // World extents covered:
+    //   X : -27.5 to +47.5  (centre 10, width  75)
+    //   Z : -30   to +30    (centre  0, depth  60)
+    //   Y : top face at 0, slab 0.2 thick (centre at -0.1)
+    // -------------------------------------------------------
+    {
+        Cube<4>* courseFloor = new Cube<4>(
+            glm::vec4(10.0f, -0.1f, 0.0f, 1.0f),
+            0.2f,   // height -- slab thickness; top face sits at Y=0
+            75.0f,  // width  -- spans X = -27.5 to +47.5
+            60.0f   // depth  -- spans Z = -30 to +30
+        );
+        courseFloor->setColour(232, 110, 66);
+        scene.addShape(courseFloor);
+    }
+
     // Coarse collision volumes for the visible course walls and major blockers.
     // These are deliberately thin so the drone can still fly over the turf.
     // Hole 8
@@ -352,7 +373,7 @@ int main() {
     addCollisionBox(glm::vec3(-19.60f, -0.38f, -10.85f), glm::vec3(-19.35f, 0.05f, -9.90f));
     /*
     ====================================
-    Course One 
+    Course One
     ===================================
     */
     Figure* turf_1 = new Figure();
@@ -577,8 +598,8 @@ int main() {
     // Move Hole 3 significantly to the right
     float centreX_3 = 9.0f;
 
-    // Lower Y value = lower on screen/world
-    float centreY_3 = -0.75f;
+    // Raised so prism bottom (centreY_3 - halfHeight_3) sits at Y=0, above the floor.
+    float centreY_3 = halfHeight_3;
 
     float centreZ_3 = -0.1f;
     float depth_3 = 5.0f;
@@ -763,7 +784,7 @@ int main() {
     float halfHeight_6 = 0.20f;
 
     // Lower Y value = lower on screen/world
-    float centreY_6 = -0.75f;
+    float centreY_6 = 0.0f;
 
     float centreZ_6 = -0.1f;
     float depth_6 = 2.5f;
@@ -851,7 +872,7 @@ int main() {
     hole_6->addShape(rectangularPrism2_6);
 
     // Green sphere
-    glm::vec4 sphereCenter_6(1.5f, -0.7f, 0.2f, 1.0f); // xyz
+    glm::vec4 sphereCenter_6(1.5f, 0.0f, 0.2f, 1.0f); // xyz
 
     float sphereRadius_6 = 0.35f;
     int sphereStacks_6 = 24;
