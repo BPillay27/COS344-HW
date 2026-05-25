@@ -616,7 +616,7 @@ int main() {
     holeFigure_1->rotateY(90);// Rotate around Y-axis to face the correct direction
 
     //move hole to be next to hole 3
-    holeFigure_1->move(-30.0f, 0.750f, 5.0f); // Adjust position to align with the turf and walls
+    holeFigure_1->move(-30.0f, 0.50f, 5.0f); // Adjust position to align with the turf and walls
 
 
     scene.addObject(holeFigure_1);
