@@ -38,6 +38,7 @@ using namespace std;
 #include "Hole8.h"
 #include "Hole9.h"
 #include "Hole10.h"
+#include "Hole11.h"
 #include "Hole13.h"
 #include "Hole4.h"
 #include "Camera.h"
@@ -48,6 +49,16 @@ SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
 Drone* gDrone = nullptr;
 
+// Drone spotlight colour palette and index
+glm::vec3 gDroneLightColor(1.0f, 1.0f, 1.0f);
+int gDroneLightColorIndex = 0;
+const glm::vec3 droneLightPalette[5] = {
+    glm::vec3(1.0f, 1.0f, 1.0f), // White
+    glm::vec3(1.0f, 0.0f, 0.0f), // Red
+    glm::vec3(0.0f, 1.0f, 0.0f), // Green
+    glm::vec3(0.0f, 0.0f, 1.0f), // Blue
+    glm::vec3(1.0f, 1.0f, 0.0f)  // Yellow
+};
 
 // Mouse state for drone look
 double gLastMouseX = 0.0, gLastMouseY = 0.0;
@@ -120,6 +131,13 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
     
     switch (key) {
+        case GLFW_KEY_L:
+            if (action == GLFW_PRESS) {
+                gDroneLightColorIndex = (gDroneLightColorIndex + 1) % 5;
+                gDroneLightColor = droneLightPalette[gDroneLightColorIndex];
+                std::cout << "Drone Light Color changed to index: " << gDroneLightColorIndex << std::endl;
+            }
+            break;
         case GLFW_KEY_ENTER:
             if (action == GLFW_PRESS) {
                 wireframeMode = !wireframeMode;
@@ -264,6 +282,7 @@ int main() {
     buildHole8(scene, glm::vec3(0.0f, 0.0f, 0.0f));
     buildHole9(scene, glm::vec3(20.0f, 0.0f, -10.0f));
     buildHole10(scene, glm::vec3(28.0f, 0.0f, 25.0f)); // Placed to the right of Hole 9
+    buildHole11(scene, glm::vec3(40.0f, 0.0f, -10.0f)); // Placed to the right of Hole 9
     buildHole13(scene, glm::vec3(0.0f, 0.0f, -6.0f)); // Keep Hole 13 centered and visible
     buildHole4(scene, glm::vec3(-20.0f, 0.0f, -10.0f)); // Placed to the left of Hole 9
     /*
@@ -901,6 +920,13 @@ int main() {
 
         // Camera position for specular lighting in the vertex shader.
         glUniform3f(glGetUniformLocation(programID, "uCameraPos"), camPos.x, camPos.y, camPos.z);
+        
+        // Update drone spotlight position and color
+        if (gDrone) {
+            glm::vec3 droneLightPos = gDrone->getPosition() - glm::vec3(0.0f, 0.5f, 0.0f); // just below drone
+            glUniform3f(glGetUniformLocation(programID, "uPointLightPos"), droneLightPos.x, droneLightPos.y, droneLightPos.z);
+            glUniform3f(glGetUniformLocation(programID, "uPointLightColor"), gDroneLightColor.r, gDroneLightColor.g, gDroneLightColor.b);
+        }
         glUniform3f(glGetUniformLocation(programID, "uLightDir"), sunDir.x, sunDir.y, sunDir.z);
         glm::vec4 sunColor = gSunLight.getColor();
         glUniform3f(glGetUniformLocation(programID, "uLightColor"), sunColor.x, sunColor.y, sunColor.z);
@@ -914,7 +940,7 @@ int main() {
         GLint grayscaleLoc = glGetUniformLocation(programID, "useGrayscale");
         if (grayscaleLoc != -1) glUniform1i(grayscaleLoc, gUseGrayscale ? 1 : 0);
 
-        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(V * model)));
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
         glUniformMatrix3fv(locNM,         1, GL_FALSE, glm::value_ptr(normalMatrix));
         glUniformMatrix4fv(locModel,      1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(locView,       1, GL_FALSE, glm::value_ptr(V));
@@ -939,7 +965,7 @@ int main() {
         glm::vec3 mmTarget   = glm::vec3(dronePos.x,  0.0f, dronePos.z);
         glm::mat4 miniMapView = glm::lookAt(mmEye, mmTarget, glm::vec3(0.0f, 0.0f, -1.0f));
 
-        glm::mat3 miniNM = glm::transpose(glm::inverse(glm::mat3(miniMapView * model)));
+        glm::mat3 miniNM = glm::transpose(glm::inverse(glm::mat3(model)));
         glUniformMatrix3fv(locNM,   1, GL_FALSE, glm::value_ptr(miniNM));
         glUniformMatrix4fv(locView, 1, GL_FALSE, glm::value_ptr(miniMapView));
 
