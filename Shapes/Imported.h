@@ -9,8 +9,8 @@
 
 #include <assimp/scene.h>
 
-#include "shapes/Shape.h"
-#include "shapes/transformation.h"
+#include "Shape.h"
+#include "transformation.h"
 
 template<int n>
 class Imported : public Shape<n> {
