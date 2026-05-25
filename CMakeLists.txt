@@ -17,6 +17,8 @@ project ("HomwWorkAssignment")
 file(COPY
     "vertexShader.glsl"
     "fragmentShader.glsl"
+    "sphere.vert"
+    "sphere.frag"
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -63,11 +65,14 @@ set(COMMON_SOURCES
     "SpatialHash.cpp"
     "LayoutReader.cpp"
     "Shapes/light.cpp"
-    "Hole8.cpp"   
-    "Hole9.cpp"   
+    "Hole8.cpp"
+    "Hole9.cpp"
     "Hole10.cpp"
     "Hole13.cpp"
     "Hole4.cpp"
+    # Prac4 golf ball (teammate's Practical 4 integration — bonus marks)
+    "GolfBall.cpp"
+    "GolfBallTexture.cpp"
 )
 
 # Create single executable from HomwWorkAssignment.cpp
