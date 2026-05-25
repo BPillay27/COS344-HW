@@ -46,12 +46,15 @@ void main() {
 
     TexCoords = aTexCoords;
 
+    // Transform vertex position to world space for lighting
+    vec3 worldPos = vec3(uModel * vec4(newPos, 1.0));
+
     // Blinn-Phong Lighting Model
     vec3 N = normalize(uNormalMatrix * aNormal);
-    vec3 V = normalize(uCameraPos - newPos);
+    vec3 V = normalize(uCameraPos - worldPos);
     
     // Ambient lighting (visible even in shadows)
-    vec3 ambientLight = vec3(0.7);
+    vec3 ambientLight = vec3(0.5);
     
     // ===== DIRECTIONAL LIGHT =====
     vec3 L_dir = normalize(uLightDir);
@@ -68,7 +71,7 @@ void main() {
     vec3 directionalLight = directionalDiffuse + directionalSpecular;
     
     // ===== POINT LIGHT =====
-    vec3 pointLightVec = uPointLightPos - newPos;
+    vec3 pointLightVec = uPointLightPos - worldPos;
     float distToPointLight = length(pointLightVec);
     
     vec3 L_point = normalize(pointLightVec);
