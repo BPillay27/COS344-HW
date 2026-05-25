@@ -51,7 +51,7 @@ void main() {
     vec3 V = normalize(uCameraPos - newPos);
     
     // Ambient lighting (visible even in shadows)
-    vec3 ambientLight = vec3(0.7);
+    vec3 ambientLight = vec3(0.22);
     
     // ===== DIRECTIONAL LIGHT =====
     vec3 L_dir = normalize(uLightDir);
