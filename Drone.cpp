@@ -228,6 +228,15 @@ glm::mat4 Drone::spinAroundPoint(const glm::vec3& centre, float angleDeg) {
 void Drone::draw(GLuint shaderID, const glm::mat4& VP) {
     glm::mat4 model = buildModelMatrix();
 
+    GLint locModel = glGetUniformLocation(shaderID, "uModel");
+    GLint locNM = glGetUniformLocation(shaderID, "uNormalMatrix");
+
+    if (locModel >= 0) glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    if (locNM >= 0) {
+        glm::mat3 nm = glm::transpose(glm::inverse(glm::mat3(model)));
+        glUniformMatrix3fv(locNM, 1, GL_FALSE, &nm[0][0]);
+    }
+
     // Static hull
     setMVP(shaderID, VP * model);
     staticParts.draw();
@@ -235,7 +244,15 @@ void Drone::draw(GLuint shaderID, const glm::mat4& VP) {
     // Spinning propellers (separate MVP per prop)
     for (int i = 0; i < 4; ++i) {
         glm::mat4 spin    = spinAroundPoint(propCenters[i], propAngle * propDirs[i]);
-        setMVP(shaderID, VP * model * spin);
+        glm::mat4 propModel = model * spin;
+        
+        if (locModel >= 0) glUniformMatrix4fv(locModel, 1, GL_FALSE, &propModel[0][0]);
+        if (locNM >= 0) {
+            glm::mat3 nm = glm::transpose(glm::inverse(glm::mat3(propModel)));
+            glUniformMatrix3fv(locNM, 1, GL_FALSE, &nm[0][0]);
+        }
+        
+        setMVP(shaderID, VP * propModel);
         props[i].draw();
     }
 }
