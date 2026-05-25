@@ -48,6 +48,35 @@ using namespace std;
 SpatialHash* gSpatialHash = nullptr;
 Figure scene = Figure();
 Drone* gDrone = nullptr;
+std::vector<AABB> gDroneCollisionBoxes;
+
+static AABB makeAABB(const glm::vec3& minimum, const glm::vec3& maximum) {
+    return { minimum, maximum };
+}
+
+static void addCollisionBox(const glm::vec3& minimum, const glm::vec3& maximum) {
+    gDroneCollisionBoxes.push_back(makeAABB(minimum, maximum));
+}
+
+static bool intersects(const AABB& a, const AABB& b) {
+    return a.min.x <= b.max.x && a.max.x >= b.min.x &&
+           a.min.y <= b.max.y && a.max.y >= b.min.y &&
+           a.min.z <= b.max.z && a.max.z >= b.min.z;
+}
+
+static bool droneCanOccupy(const AABB& candidate) {
+    if (candidate.min.y < -0.05f) {
+        return false;
+    }
+
+    for (const auto& box : gDroneCollisionBoxes) {
+        if (intersects(candidate, box)) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 // Drone spotlight colour palette and index
 glm::vec3 gDroneLightColor(1.0f, 1.0f, 1.0f);
@@ -276,6 +305,7 @@ int main() {
     
     // Drone init
     gDrone = new Drone();
+    gDrone->setCollisionTest(droneCanOccupy);
     gDrone->createGLBuffers();
 
     // Build Hole geometry and register it in the global scene.
@@ -307,6 +337,40 @@ int main() {
         scene.addShape(courseFloor);
     }
 
+    // Coarse collision volumes for the visible course walls and major blockers.
+    // These are deliberately thin so the drone can still fly over the turf.
+    // Hole 8
+    addCollisionBox(glm::vec3(-2.00f, 0.00f, -16.75f), glm::vec3(-1.75f, 2.10f, 0.25f));
+    addCollisionBox(glm::vec3( 1.75f, 0.00f, -16.75f), glm::vec3( 2.00f, 2.10f, 0.25f));
+    addCollisionBox(glm::vec3(-1.75f, 0.00f, -0.25f),  glm::vec3( 1.75f, 0.65f, 0.25f));
+    addCollisionBox(glm::vec3(-1.75f, 0.00f, -16.75f), glm::vec3( 1.75f, 0.65f, -16.25f));
+
+    // Hole 9
+    addCollisionBox(glm::vec3(19.75f, 0.00f, -10.25f), glm::vec3(20.25f, 0.65f, -9.75f));
+    addCollisionBox(glm::vec3(19.75f, 0.00f, -11.95f), glm::vec3(20.25f, 1.65f, -8.05f));
+    addCollisionBox(glm::vec3(26.70f, 0.00f, -8.35f),  glm::vec3(27.05f, 1.65f, -1.15f));
+    addCollisionBox(glm::vec3(29.65f, 0.00f, -11.95f), glm::vec3(30.00f, 1.65f, -1.15f));
+    addCollisionBox(glm::vec3(20.00f, 0.00f, -11.95f), glm::vec3(30.00f, 0.65f, -11.70f));
+    addCollisionBox(glm::vec3(27.75f, 0.00f, -1.50f),  glm::vec3(30.00f, 1.65f, -1.15f));
+
+    // Hole 10
+    addCollisionBox(glm::vec3(26.00f, 0.00f,  6.90f),  glm::vec3(26.35f, 0.65f, 25.10f));
+    addCollisionBox(glm::vec3(29.65f, 0.00f,  6.90f),  glm::vec3(30.00f, 0.65f, 25.10f));
+    addCollisionBox(glm::vec3(26.00f, 0.00f,  6.90f),  glm::vec3(30.00f, 0.65f, 7.15f));
+    addCollisionBox(glm::vec3(26.00f, 0.00f, 25.10f),  glm::vec3(30.00f, 0.65f, 25.35f));
+
+    // Hole 13
+    addCollisionBox(glm::vec3(-1.90f, -6.38f, -6.03f), glm::vec3( 1.90f, -5.45f, -5.97f));
+    addCollisionBox(glm::vec3(-1.90f, -6.38f, -5.03f), glm::vec3( 1.90f, -5.45f, -4.97f));
+    addCollisionBox(glm::vec3(-1.90f, -5.92f, -6.03f), glm::vec3(-1.62f, -5.05f, -5.97f));
+    addCollisionBox(glm::vec3( 1.62f, -5.92f, -6.03f), glm::vec3( 1.90f, -5.05f, -5.97f));
+
+    // Hole 4
+    addCollisionBox(glm::vec3(-20.85f, 0.00f, -10.35f), glm::vec3(-20.00f, 0.55f, -9.35f));
+    addCollisionBox(glm::vec3(-19.20f, 0.00f, -10.35f), glm::vec3(-18.95f, 0.55f, -9.35f));
+    addCollisionBox(glm::vec3(-20.85f, -0.40f, -10.35f), glm::vec3(-18.95f, -0.12f, -9.35f));
+    addCollisionBox(glm::vec3(-20.15f, -0.38f, -10.85f), glm::vec3(-18.40f, -0.12f, -10.25f));
+    addCollisionBox(glm::vec3(-19.60f, -0.38f, -10.85f), glm::vec3(-19.35f, 0.05f, -9.90f));
     /*
     ====================================
     Course One
